@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class UserPreference extends Model
 {
-    use HasFactory;
-
-    protected $fillable = [
+     protected $fillable = [
         'user_id',
         'email_notifications_enabled',
         'browser_notifications_enabled',
@@ -17,21 +14,12 @@ class UserPreference extends Model
         'two_factor_auth_enabled',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'email_notifications_enabled' => 'boolean',
-            'browser_notifications_enabled' => 'boolean',
-            'sms_critical_alerts_enabled' => 'boolean',
-            'two_factor_auth_enabled' => 'boolean',
-        ];
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
+    protected $casts = [
+        'email_notifications_enabled'   => 'boolean',
+        'browser_notifications_enabled' => 'boolean',
+        'sms_critical_alerts_enabled'   => 'boolean',
+        'two_factor_auth_enabled'       => 'boolean',
+    ];
 
     public function user()
     {

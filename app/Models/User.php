@@ -2,23 +2,21 @@
 
 namespace App\Models;
 
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+//use Illuminate\Contracts\Auth\MustVerifyEmail;
+//use Database\Factories\UserFactory;
+//use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+   use Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'name',
         'phone',
         'email',
+        'email_verified_at',
         'password',
         'avatar',
         'governorate',
@@ -32,24 +30,49 @@ class User extends Authenticatable
         'specialization_id',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'identity_verified' => 'boolean',
+    ];
+
+    public function role()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'identity_verified' => 'boolean',
-            'password' => 'hashed',
-        ];
+        return $this->belongsTo(Role::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
+    }
+
+    public function specialization()
+    {
+        return $this->belongsTo(Specialization::class);
+    }
+
+    public function preference()
+    {
+        return $this->hasOne(UserPreference::class);
+    }
+
+    public function feasibilityStudies()
+    {
+        return $this->hasMany(FeasibilityStudy::class);
+    }
+
+    public function feasibilityRequests()
+    {
+        return $this->hasMany(FeasibilityRequest::class);
+    }
+
+    public function knowledgeBaseItems()
+    {
+        return $this->hasMany(KnowledgeBaseItem::class);
     }
 
     /*
