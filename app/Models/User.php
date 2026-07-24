@@ -74,4 +74,30 @@ class User extends Authenticatable
     {
         return $this->hasMany(KnowledgeBaseItem::class);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
+    }
+
+    public function specialization()
+    {
+        return $this->belongsTo(Specialization::class);
+    }
+
+    public function preference()
+{
+    return $this->hasOne(UserPreference::class);
+}
 }

@@ -1,0 +1,23 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Category;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class CategoryFactory extends Factory
+{
+    protected $model = Category::class;
+
+    /**
+     * Define the model's default state.
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->word(),
+            'slug' => fake()->unique()->slug(),
+            'type' => fake()->randomElement(['type1', 'type2', 'type3']),
+        ];
+    }
+}
