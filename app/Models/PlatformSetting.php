@@ -6,5 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class PlatformSetting extends Model
 {
-    protected $fillable = ['key' , 'value' , 'type'];
+    public $timestamps = false; // لا يحتوي الجدول على created_at
+
+    protected $fillable = [
+        'platform_name',
+        'default_language',
+        'timezone',
+        'date_format',
+        'production_api_key',
+        'test_api_key',
+    ];
 }

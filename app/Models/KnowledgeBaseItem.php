@@ -6,20 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class KnowledgeBaseItem extends Model
 {
-    protected $fillable = ['category_id', 'author_id', 'title', 'content', 'views_count'];
+     protected $fillable = [
+        'title',
+        'summary',
+        'content',
+        'type',
+        'status',
+        'category_id',
+        'media_url',
+        'file_size_bytes',
+        'view_count',
+        'user_id',
+    ];
 
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function author()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'author_id');
-    }
-
-    public function attachments()
-    {
-        return $this->morphMany(Attachment::class, 'attachable');
+        return $this->belongsTo(User::class);
     }
 }

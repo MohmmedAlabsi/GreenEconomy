@@ -6,21 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Consultation extends Model
 {
-  protected $fillable = ['farmer_id', 'engineer_id', 'plant_id', 'title', 'description', 'status'];
+  protected $fillable = [
+        'user_id',
+        'issue_title',
+        'crop_type',
+        'crop_age',
+        'issue_duration',
+        'description',
+        'status',
+        'assigned_expert_id',
+    ];
 
-    public function farmer()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'farmer_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function engineer()
+    public function assignedExpert()
     {
-        return $this->belongsTo(User::class, 'engineer_id');
-    }
-
-    public function plant()
-    {
-        return $this->belongsTo(Plant::class);
+        return $this->belongsTo(User::class, 'assigned_expert_id');
     }
 
     public function attachments()

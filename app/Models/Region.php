@@ -6,25 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class Region extends Model
 {
-      protected $fillable = ['name', 'code', 'parent_id'];
-
-    public function parent()
-    {
-        return $this->belongsTo(Region::class, 'parent_id');
-    }
-
-    public function children()
-    {
-        return $this->hasMany(Region::class, 'parent_id');
-    }
+      protected $fillable = [
+        'name',
+    ];
 
     public function users()
     {
         return $this->hasMany(User::class);
     }
 
-    public function fieldVisits()
+    public function feasibilityStudies()
     {
-        return $this->hasMany(FieldVisit::class);
+        return $this->hasMany(FeasibilityStudy::class);
+    }
+
+    public function feasibilityRequests()
+    {
+        return $this->hasMany(FeasibilityRequest::class);
     }
 }

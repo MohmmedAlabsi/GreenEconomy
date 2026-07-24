@@ -10,13 +10,35 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+   use Notifiable;
+
     protected $fillable = [
-        'role_id', 'region_id', 'specialization_id',
-        'name', 'email', 'phone', 'password', 'status'
+        'name',
+        'phone',
+        'email',
+        'email_verified_at',
+        'password',
+        'avatar',
+        'governorate',
+        'district',
+        'crop_types',
+        'membership_tier',
+        'status',
+        'identity_verified',
+        'role_id',
+        'region_id',
+        'specialization_id',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'identity_verified' => 'boolean',
+    ];
 
     public function role()
     {
@@ -38,24 +60,9 @@ class User extends Authenticatable
         return $this->hasOne(UserPreference::class);
     }
 
-    public function farmerConsultations()
+    public function feasibilityStudies()
     {
-        return $this->hasMany(Consultation::class, 'farmer_id');
-    }
-
-    public function engineerConsultations()
-    {
-        return $this->hasMany(Consultation::class, 'engineer_id');
-    }
-
-    public function fieldVisitsAsFarmer()
-    {
-        return $this->hasMany(FieldVisit::class, 'farmer_id');
-    }
-
-    public function fieldVisitsAsEngineer()
-    {
-        return $this->hasMany(FieldVisit::class, 'engineer_id');
+        return $this->hasMany(FeasibilityStudy::class);
     }
 
     public function feasibilityRequests()
@@ -63,8 +70,8 @@ class User extends Authenticatable
         return $this->hasMany(FeasibilityRequest::class);
     }
 
-    public function activityLogs()
+    public function knowledgeBaseItems()
     {
-        return $this->hasMany(ActivityLog::class);
+        return $this->hasMany(KnowledgeBaseItem::class);
     }
 }

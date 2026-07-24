@@ -6,16 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-     protected $fillable = ['name', 'slug', 'type'];
-
-    public function plants()
-    {
-        return $this->hasMany(Plant::class);
-    }
+      protected $fillable = [
+        'name',
+        'slug',
+        'type',
+    ];
 
     public function feasibilityStudies()
     {
         return $this->hasMany(FeasibilityStudy::class);
+    }
+
+    public function feasibilityRequests()
+    {
+        return $this->hasMany(FeasibilityRequest::class);
     }
 
     public function knowledgeBaseItems()

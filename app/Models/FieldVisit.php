@@ -6,21 +6,33 @@ use Illuminate\Database\Eloquent\Model;
 
 class FieldVisit extends Model
 {
-    protected $fillable = ['farmer_id', 'engineer_id', 'region_id', 'visit_date', 'cost', 'report', 'status'];
+    protected $fillable = [
+        'user_id',
+        'contact_name',
+        'contact_phone',
+        'governorate',
+        'district',
+        'village_or_area',
+        'nearest_landmark',
+        'crop_type',
+        'area_size',
+        'infestation_type',
+        'priority_level',
+        'problem_description',
+        'status',
+        'scheduled_at',
+        'estimated_cost',
+    ];
 
-    public function farmer()
-    {
-        return $this->belongsTo(User::class, 'farmer_id');
-    }
+    protected $casts = [
+        'scheduled_at' => 'datetime',
+        'area_size'      => 'decimal:2',
+        'estimated_cost' => 'decimal:2',
+    ];
 
-    public function engineer()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'engineer_id');
-    }
-
-    public function region()
-    {
-        return $this->belongsTo(Region::class);
+        return $this->belongsTo(User::class);
     }
 
     public function attachments()

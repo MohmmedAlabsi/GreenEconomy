@@ -6,7 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Plant extends Model
 {
-  protected $fillable = ['category_id', 'name', 'scientific_name', 'planting_season', 'water_requirements'];
+  protected $fillable = [
+        'common_name',
+        'scientific_name',
+        'description',
+        'climate_requirements',
+        'irrigation_schedule',
+        'planting_season',
+        'category_id',
+        'image_url',
+    ];
 
     public function category()
     {
@@ -15,13 +24,6 @@ class Plant extends Model
 
     public function diseases()
     {
-        return $this->belongsToMany(PlantDisease::class, 'plant_disease')
-                    ->withPivot('severity')
-                    ->withTimestamps();
-    }
-
-    public function consultations()
-    {
-        return $this->hasMany(Consultation::class);
+        return $this->belongsToMany(PlantDisease::class, 'plant_disease_pivot', 'plant_id', 'disease_id');
     }
 }

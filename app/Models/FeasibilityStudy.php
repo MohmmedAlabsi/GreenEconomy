@@ -6,11 +6,34 @@ use Illuminate\Database\Eloquent\Model;
 
 class FeasibilityStudy extends Model
 {
-    protected $fillable = ['category_id', 'title', 'summary', 'estimated_cost', 'expected_roi', 'file_path'];
+     protected $fillable = [
+        'title',
+        'description',
+        'category_id',
+        'region_id',
+        'cover_image',
+        'capital_required',
+        'expected_roi',
+        'payback_period',
+        'risk_level',
+        'status',
+        'pdf_file',
+        'user_id',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
     }
  
 }

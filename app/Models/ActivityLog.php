@@ -6,7 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class ActivityLog extends Model
 {
-    protected $fillable = ['user_id', 'action', 'description', 'ip_address'];
+   public $timestamps = false; // الجدول يحتوي فقط على created_at بدون updated_at
+
+    protected $fillable = [
+        'user_id',
+        'action_text',
+        'target_type',
+        'target_id',
+    ];
 
     public function user()
     {

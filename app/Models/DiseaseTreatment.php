@@ -6,10 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class DiseaseTreatment extends Model
 {
-    protected $fillable = ['plant_disease_id', 'treatment_name', 'type', 'dosage_instructions'];
+    protected $fillable = [
+        'disease_id',
+        'treatment_type',
+        'title',
+        'instructions',
+    ];
 
     public function disease()
     {
-        return $this->belongsTo(PlantDisease::class, 'plant_disease_id');
+        return $this->belongsTo(PlantDisease::class, 'disease_id');
     }
 }
