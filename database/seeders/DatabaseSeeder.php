@@ -18,7 +18,17 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             CategorySeeder::class,
+            RoleSeeder::class,
+            PlatformSettingSeeder::class,
+            RegionSeeder::class,
+            SpecializationSeeder::class,
+            UserSeeder::class,
+            UserPreferenceSeeder::class,
+
+
         ]);
+
+        
         // User::factory(10)->create();
 
         // User::factory()->create([
