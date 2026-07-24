@@ -24,6 +24,20 @@ class DatabaseSeeder extends Seeder
             SpecializationSeeder::class,
             UserSeeder::class,
             UserPreferenceSeeder::class,
+            ActivityLogSeeder::class,
+            AttachmentSeeder::class,
+            ConsultationSeeder::class,
+            ConsultationRequestSeeder::class,
+            PlantDiseaseSeeder::class,
+            DiseaseTreatmentSeeder::class,
+            FeasibilityStudySeeder::class,
+            FeasibilityRequestSeeder::class,
+            FieldVisitSeeder::class,
+            KnowledgeBaseItemSeeder::class,
+            PlantSeeder::class,
+            
+            
+            
 
 
         ]);
