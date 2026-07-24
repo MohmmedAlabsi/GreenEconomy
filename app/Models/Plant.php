@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Plant extends Model
 {
+    use HasFactory;
   protected $fillable = [
         'common_name',
         'scientific_name',
@@ -26,4 +28,5 @@ class Plant extends Model
     {
         return $this->belongsToMany(PlantDisease::class, 'plant_disease_pivot', 'plant_id', 'disease_id');
     }
+   
 }
