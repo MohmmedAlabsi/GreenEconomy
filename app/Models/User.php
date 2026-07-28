@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\UserPreference;
 
 class User extends Authenticatable
 {
@@ -74,5 +75,9 @@ class User extends Authenticatable
     public function knowledgeBaseItems()
     {
         return $this->hasMany(KnowledgeBaseItem::class);
+    }
+    public function Consultation()
+    {
+        return $this->hasMany(Consultation::class);
     }
 }
