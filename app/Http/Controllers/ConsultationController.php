@@ -18,9 +18,10 @@ class ConsultationController extends Controller
     }
 
     // عرض تفاصيل استشارة محددة مع المرفقات الخاصة بها (Morph)
-    public function show(Consultation $consultation)
+    public function show($id)
     {
-        return response()->json($consultation->load(['user', 'assignedExpert', 'attachments']));
+        $consultation_id = Consultation::with(['user', 'assignedExpert', 'attachments'])->findOrFail($id);
+        return response()->json($consultation_id);
     }
 
     /**

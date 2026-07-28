@@ -18,9 +18,10 @@ class FeasibilityStudyController extends Controller
     }
 
     // عرض تفاصيل دراسة جدوى محددة
-    public function show(FeasibilityStudy $feasibilityStudy)
+    public function show($id)
     {
-        return response()->json($feasibilityStudy->load(['category', 'region', 'user']));
+        $feasibilityStudy_id = FeasibilityStudy::with(['category', 'region', 'user'])->findOrFail($id);
+        return response()->json($feasibilityStudy_id);
     }
 
     /**

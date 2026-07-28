@@ -18,9 +18,10 @@ class CategoryController extends Controller
     }
 
     // عرض تفاصيل تصنيف معين مع النباتات والمحتوى التوعوي التابع له
-    public function show(Category $category)
+    public function show($id)
     {
-        return response()->json($category->load(['feasibilityStudies', 'knowledgeBaseItems']));
+        $category_id = Category::with(['feasibilityStudies', 'knowledgeBaseItems'])->findOrFail($id);
+        return response()->json($category_id);
     }
 
     /**

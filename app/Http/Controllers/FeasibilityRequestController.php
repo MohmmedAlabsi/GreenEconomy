@@ -18,9 +18,10 @@ class FeasibilityRequestController extends Controller
     }
 
     // عرض تفاصيل طلب معين
-    public function show(FeasibilityRequest $feasibilityRequest)
+    public function show($id)
     {
-        return response()->json($feasibilityRequest->load(['user', 'category', 'region']));
+        $FeasibilityRequest_id = FeasibilityRequest::with(['user', 'category', 'region'])->findOrFail($id);
+        return response()->json($FeasibilityRequest_id);
     }
 
     /**

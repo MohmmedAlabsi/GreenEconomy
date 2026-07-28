@@ -20,9 +20,10 @@ class RegionController extends Controller
     }
 
     // عرض منطقة معينة مع دراسات الجدوى المرتبطة بها
-    public function show(Region $region)
+    public function show($id)
     {
-        return response()->json($region->load(['feasibilityStudies', 'feasibilityRequests']));
+        $Region_id = Region::with(['feasibilityStudies', 'feasibilityRequests'])->findOrFail($id);
+        return response()->json($Region_id); 
     }
 
     /**

@@ -18,9 +18,10 @@ class PlantDiseaseController extends Controller
     }
 
     // عرض تفاصيل مرض معين مع المحاصيل المعرضة له وطرق العلاج
-    public function show(PlantDisease $plantDisease)
+    public function show($id)
     {
-        return response()->json($plantDisease->load(['plants', 'treatments']));
+        $PlantDisease_id = PlantDisease::with(['plants', 'treatments'])->findOrFail($id);
+        return response()->json($PlantDisease_id);       
     }
 
     /**

@@ -18,9 +18,10 @@ class PlantController extends Controller
     }
 
     // عرض نبات محدد مع الأمراض والآفات التي قد تصيبه
-    public function show(Plant $plant)
+    public function show($id)
     {
-        return response()->json($plant->load(['category', 'diseases']));
+        $Plant_id = Plant::with(['category', 'diseases'])->findOrFail($id);
+        return response()->json($Plant_id);
     }
 
     /**

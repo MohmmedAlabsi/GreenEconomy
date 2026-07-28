@@ -18,9 +18,10 @@ class FieldVisitController extends Controller
     }
 
     // عرض تفاصيل زيارة ميدانية معينة
-    public function show(FieldVisit $fieldVisit)
+    public function show($id)
     {
-        return response()->json($fieldVisit->load(['user', 'attachments']));
+        $FieldVisit_id = FieldVisit::with(['user', 'attachments'])->findOrFail($id);
+        return response()->json($FieldVisit_id);
     }
 
     /**

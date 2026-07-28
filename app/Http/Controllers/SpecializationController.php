@@ -18,9 +18,10 @@ class SpecializationController extends Controller
     }
 
     // عرض تخصص محدد والمستخدمين (الخبراء) التابعين له
-    public function show(Specialization $specialization)
+    public function show($id)
     {
-        return response()->json($specialization->load(['role', 'users']));
+        $Specialization_id = Specialization::with(['role', 'users'])->findOrFail($id);
+        return response()->json($Specialization_id); 
     }
 
     /**

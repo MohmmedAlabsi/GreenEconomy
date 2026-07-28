@@ -18,11 +18,12 @@ class KnowledgeBaseController extends Controller
     }
 
     // عرض مقال أو عنصر محدد
-    public function show(KnowledgeBaseItem $knowledgeBase)
+    public function show($id)
     {
         // زيادة عدد المشاهدات عند القراءة
-        $knowledgeBase->increment('view_count');
-        return response()->json($knowledgeBase->load(['category', 'user']));
+        //$knowledgeBase->increment('view_count');
+        $KnowledgeBaseItem_id = KnowledgeBaseItem::with(['category', 'user'])->findOrFail($id);
+        return response()->json($KnowledgeBaseItem_id);
     }
 
     /**

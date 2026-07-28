@@ -20,9 +20,10 @@ class UserController extends Controller
     }
 
     // عرض ملف مستخدم محدد مع تفضيلاته واستشاراته
-    public function show(User $user)
+    public function show($id)
     {
-        return response()->json($user->load(['role', 'region', 'specialization', 'preference', 'consultation']));
+        $user_id = User::with('role', 'region', 'specialization', 'preference', 'consultation') -> findOrFail($id);
+        return response()->json($user_id);
     }
 
     /**
