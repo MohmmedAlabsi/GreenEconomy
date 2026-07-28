@@ -1,6 +1,8 @@
 <?php
-/*
+
 use Illuminate\Support\Facades\Route;
+
+// استدعاء المتحكمات
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RegionController;
@@ -15,82 +17,82 @@ use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\FieldVisitController;
 use App\Http\Controllers\PlatformSettingController;
 
-// Auth Controller
 /*
-Route::get('/auth/me', [AuthController::class, 'me'])
-    ->name('auth.me');
+|--------------------------------------------------------------------------
+| API Routes - Read Only Operations
+|--------------------------------------------------------------------------
 */
-/* 
-/*
-    // User Controller
-    Route::get('/users', [UserController::class, 'index'])
-        ->name('users.index');
 
-    Route::get('/users/{id}', [UserController::class, 'show'])
-        ->name('users.show');
-        // Region Controller
+// Auth
+Route::get('/auth/me', [AuthController::class, 'me'])
+    ->name('api.auth.me');
+
+// Users
+Route::get('/users', [UserController::class, 'index'])
+    ->name('api.users.index');
+Route::get('/users/{id}', [UserController::class, 'show'])
+    ->name('api.users.show');
+
+// Regions
 Route::get('/regions', [RegionController::class, 'index'])
-    ->name('regions.index');
+    ->name('api.regions.index');
 Route::get('/regions/{id}', [RegionController::class, 'show'])
-    ->name('regions.show');
+    ->name('api.regions.show');
 
-// Category Controller
+// Categories
 Route::get('/categories', [CategoryController::class, 'index'])
-    ->name('categories.index');
+    ->name('api.categories.index');
 Route::get('/categories/{id}', [CategoryController::class, 'show'])
-    ->name('categories.show');
+    ->name('api.categories.show');
 
-// Specialization Controller
+// Specializations
 Route::get('/specializations', [SpecializationController::class, 'index'])
-    ->name('specializations.index');
+    ->name('api.specializations.index');
 Route::get('/specializations/{id}', [SpecializationController::class, 'show'])
-    ->name('specializations.show');
+    ->name('api.specializations.show');
 
-// Feasibility Study Controller
+// Feasibility Studies
 Route::get('/feasibility_studies', [FeasibilityStudyController::class, 'index'])
-    ->name('feasibility-studies.index');
+    ->name('api.feasibility-studies.index');
 Route::get('/feasibility_studies/{id}', [FeasibilityStudyController::class, 'show'])
-    ->name('feasibility-studies.show');
+    ->name('api.feasibility-studies.show');
 
-// Feasibility Request Controller
+// Feasibility Requests
 Route::get('/feasibility_requests', [FeasibilityRequestController::class, 'index'])
-    ->name('feasibility-requests.index');
+    ->name('api.feasibility-requests.index');
 Route::get('/feasibility_requests/{id}', [FeasibilityRequestController::class, 'show'])
-    ->name('feasibility-requests.show');
+    ->name('api.feasibility-requests.show');
 
-// Knowledge Base Controller
+// Knowledge Base
 Route::get('/knowledge_base_item', [KnowledgeBaseController::class, 'index'])
-    ->name('knowledge-base.index');
+    ->name('api.knowledge-base.index');
 Route::get('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'show'])
-    ->name('knowledge-base.show');
+    ->name('api.knowledge-base.show');
 
-// Plant Controller
+// Plants
 Route::get('/plants', [PlantController::class, 'index'])
-    ->name('plants.index');
+    ->name('api.plants.index');
 Route::get('/plants/{id}', [PlantController::class, 'show'])
-    ->name('plants.show');
+    ->name('api.plants.show');
 
-// Plant Disease Controller
+// Plant Diseases
 Route::get('/plant_diseases', [PlantDiseaseController::class, 'index'])
-    ->name('plant-diseases.index');
+    ->name('api.plant-diseases.index');
 Route::get('/plant_diseases/{id}', [PlantDiseaseController::class, 'show'])
-    ->name('plant-diseases.show');
+    ->name('api.plant-diseases.show');
 
-// Consultation Controller
+// Consultations
 Route::get('/consultations', [ConsultationController::class, 'index'])
-    ->name('consultations.index');
+    ->name('api.consultations.index');
 Route::get('/consultations/{id}', [ConsultationController::class, 'show'])
-    ->name('consultations.show');
+    ->name('api.consultations.show');
 
-// Field Visit Controller
+// Field Visits
 Route::get('/field_visits', [FieldVisitController::class, 'index'])
-    ->name('field-visits.index');
+    ->name('api.field-visits.index');
 Route::get('/field_visits/{id}', [FieldVisitController::class, 'show'])
-    ->name('field-visits.show');
+    ->name('api.field-visits.show');
 
-// Platform Setting Controller
+// Platform Settings
 Route::get('/platform_settings', [PlatformSettingController::class, 'index'])
-    ->name('platform-settings.index');
-    
-    
-    */
+    ->name('api.platform-settings.index');
