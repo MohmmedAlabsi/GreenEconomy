@@ -33,6 +33,14 @@ Route::get('/users', [UserController::class, 'index'])
 Route::get('/users/{id}', [UserController::class, 'show'])
     ->name('api.users.show');
 
+    // Users
+Route::post('/users', [UserController::class, 'store'])
+    ->name('api.users.store');
+Route::put('/users/{id}', [UserController::class, 'update'])
+    ->name('api.users.update');
+Route::delete('/users/{id}', [UserController::class, 'destroy'])
+    ->name('api.users.destroy');
+
 // Regions
 Route::get('/regions', [RegionController::class, 'index'])
     ->name('api.regions.index');
@@ -86,6 +94,15 @@ Route::get('/consultations', [ConsultationController::class, 'index'])
     ->name('api.consultations.index');
 Route::get('/consultations/{id}', [ConsultationController::class, 'show'])
     ->name('api.consultations.show');
+
+Route::post('/consultations', [ConsultationController::class, 'store'])
+    ->name('api.consultations.store');
+
+Route::put('/consultations/{id}', [ConsultationController::class, 'update'])
+    ->name('api.consultations.update');
+
+Route::delete('/consultations/{id}', [ConsultationController::class, 'destroy'])
+    ->name('api.consultations.destroy');
 
 // Field Visits
 Route::get('/field_visits', [FieldVisitController::class, 'index'])
