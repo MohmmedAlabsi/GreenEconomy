@@ -4,63 +4,101 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Specialization;
-use Illuminate\Routing\Controller;
 
 class SpecializationController extends Controller
 {
+
     /**
-     * Display a listing of the resource.
+     * Display all specializations.
      */
     public function index()
     {
         $specializations = Specialization::with('role')->get();
+
         return response()->json($specializations);
     }
 
-    // عرض تخصص محدد والمستخدمين (الخبراء) التابعين له
+
+    /**
+     * Display a specific specialization.
+     */
     public function show($id)
     {
-        $Specialization_id = Specialization::with(['role', 'users'])->findOrFail($id);
-        return response()->json($Specialization_id); 
+        $specialization = Specialization::with([
+            'role',
+            'users'
+        ])->findOrFail($id);
+
+        return response()->json($specialization);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a new specialization.
      */
     public function store(Request $request)
     {
-        //
+
+        $validated = $request->validate([
+            'role_id' => 'required|exists:roles,id',
+            'name' => 'required|string|max:150',
+        ]);
+
+
+        $specialization = Specialization::create($validated);
+
+
+        return response()->json([
+            'message' => 'Specialization created successfully',
+            'data' => $specialization
+        ],201);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+
 
     /**
-     * Update the specified resource in storage.
+     * Update specialization.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+
+        $specialization = Specialization::findOrFail($id);
+
+
+        $validated = $request->validate([
+            'role_id' => 'required|exists:roles,id',
+            'name' => 'required|string|max:150',
+        ]);
+
+
+        $specialization->update($validated);
+
+
+        return response()->json([
+            'message'=>'Specialization updated successfully',
+            'data'=>$specialization
+        ]);
+
     }
 
+
+
     /**
-     * Remove the specified resource from storage.
+     * Delete specialization.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+
+        $specialization = Specialization::findOrFail($id);
+
+
+        $specialization->delete();
+
+
+        return response()->json([
+            'message'=>'Specialization deleted successfully'
+        ]);
+
     }
+
 }

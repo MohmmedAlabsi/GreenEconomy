@@ -4,69 +4,89 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Region;
-use Illuminate\Routing\Controller;
 
 class RegionController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the regions.
      */
-
-    // عرض كل المناطق الجغرافية
     public function index()
     {
         $regions = Region::all();
+
         return response()->json($regions);
     }
 
-    // عرض منطقة معينة مع دراسات الجدوى المرتبطة بها
+
+    /**
+     * Display a specific region with related data.
+     */
     public function show($id)
     {
-        $Region_id = Region::with(['feasibilityStudies', 'feasibilityRequests'])->findOrFail($id);
-        return response()->json($Region_id); 
+        $region = Region::with([
+            'feasibilityStudies',
+            'feasibilityRequests'
+        ])->findOrFail($id);
+
+        return response()->json($region);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created region.
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:150',
+        ]);
+
+
+        $region = Region::create($validated);
+
+
+        return response()->json([
+            'message' => 'Region created successfully',
+            'data' => $region
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
 
     /**
-     * Show the form for editing the specified resource.
+     * Update an existing region.
      */
-    public function edit(string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $region = Region::findOrFail($id);
+
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:150',
+        ]);
+
+
+        $region->update($validated);
+
+
+        return response()->json([
+            'message' => 'Region updated successfully',
+            'data' => $region
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete a region.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $region = Region::findOrFail($id);
+
+        $region->delete();
+
+
+        return response()->json([
+            'message' => 'Region deleted successfully'
+        ]);
     }
 }
