@@ -35,10 +35,49 @@ class FeasibilityStudyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
-    }
+    /**
+ * Store a newly created resource.
+ */
+public function store(Request $request)
+{
+    $validated = $request->validate([
+
+        'title' => 'required|string|max:255',
+
+        'description' => 'nullable|string',
+
+        'category_id' => 'nullable|exists:categories,id',
+
+        'region_id' => 'nullable|exists:regions,id',
+
+        'cover_image' => 'nullable|string|max:255',
+
+        'capital_required' => 'nullable|numeric',
+
+        'expected_roi' => 'required|numeric',
+
+        'payback_period' => 'nullable|integer',
+
+        'risk_level' => 'nullable|string|max:50',
+
+        'status' => 'nullable|string|max:50',
+
+        'pdf_file' => 'nullable|string|max:255',
+
+        'user_id' => 'required|exists:users,id',
+
+    ]);
+
+    $study = FeasibilityStudy::create($validated);
+
+    return response()->json([
+
+        'message' => 'Feasibility study created successfully',
+
+        'data' => $study
+
+    ], 201);
+}
 
 
     /**
@@ -52,16 +91,68 @@ class FeasibilityStudyController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+    /**
+ * Update the specified resource.
+ */
+public function update(Request $request, string $id)
+{
+    $study = FeasibilityStudy::findOrFail($id);
+
+    $validated = $request->validate([
+
+        'title' => 'sometimes|string|max:255',
+
+        'description' => 'nullable|string',
+
+        'category_id' => 'nullable|exists:categories,id',
+
+        'region_id' => 'nullable|exists:regions,id',
+
+        'cover_image' => 'nullable|string|max:255',
+
+        'capital_required' => 'nullable|numeric',
+
+        'expected_roi' => 'sometimes|numeric',
+
+        'payback_period' => 'nullable|integer',
+
+        'risk_level' => 'nullable|string|max:50',
+
+        'status' => 'nullable|string|max:50',
+
+        'pdf_file' => 'nullable|string|max:255',
+
+        'user_id' => 'sometimes|exists:users,id',
+
+    ]);
+
+    $study->update($validated);
+
+    return response()->json([
+
+        'message' => 'Feasibility study updated successfully',
+
+        'data' => $study
+
+    ]);
+}
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
-    }
+    /**
+ * Remove the specified resource.
+ */
+public function destroy(string $id)
+{
+    $study = FeasibilityStudy::findOrFail($id);
+
+    $study->delete();
+
+    return response()->json([
+
+        'message' => 'Feasibility study deleted successfully'
+
+    ]);
+}
 }

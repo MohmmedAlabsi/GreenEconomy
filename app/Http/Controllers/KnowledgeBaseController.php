@@ -37,10 +37,45 @@ class KnowledgeBaseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
-    }
+    /**
+ * Store a newly created resource.
+ */
+public function store(Request $request)
+{
+    $validated = $request->validate([
+
+        'title' => 'required|string|max:255',
+
+        'summary' => 'nullable|string',
+
+        'content' => 'nullable|string',
+
+        'type' => 'required|string|max:50',
+
+        'status' => 'nullable|string|max:50',
+
+        'category_id' => 'required|exists:categories,id',
+
+        'media_url' => 'nullable|string|max:255',
+
+        'file_size_bytes' => 'nullable|integer',
+
+        'view_count' => 'nullable|integer',
+
+        'user_id' => 'required|exists:users,id',
+
+    ]);
+
+    $item = KnowledgeBaseItem::create($validated);
+
+    return response()->json([
+
+        'message' => 'Knowledge base item created successfully',
+
+        'data' => $item
+
+    ], 201);
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -53,16 +88,64 @@ class KnowledgeBaseController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+    /**
+ * Update the specified resource.
+ */
+public function update(Request $request, string $id)
+{
+    $item = KnowledgeBaseItem::findOrFail($id);
+
+    $validated = $request->validate([
+
+        'title' => 'sometimes|string|max:255',
+
+        'summary' => 'nullable|string',
+
+        'content' => 'nullable|string',
+
+        'type' => 'sometimes|string|max:50',
+
+        'status' => 'nullable|string|max:50',
+
+        'category_id' => 'sometimes|exists:categories,id',
+
+        'media_url' => 'nullable|string|max:255',
+
+        'file_size_bytes' => 'nullable|integer',
+
+        'view_count' => 'nullable|integer',
+
+        'user_id' => 'sometimes|exists:users,id',
+
+    ]);
+
+    $item->update($validated);
+
+    return response()->json([
+
+        'message' => 'Knowledge base item updated successfully',
+
+        'data' => $item
+
+    ]);
+}
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
-    }
+    /**
+ * Remove the specified resource.
+ */
+public function destroy(string $id)
+{
+    $item = KnowledgeBaseItem::findOrFail($id);
+
+    $item->delete();
+
+    return response()->json([
+
+        'message' => 'Knowledge base item deleted successfully'
+
+    ]);
+}
 }

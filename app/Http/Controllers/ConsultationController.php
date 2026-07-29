@@ -35,10 +35,31 @@ class ConsultationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
-    }
+    /**
+ * Store new consultation
+ */
+public function store(Request $request)
+{
+    $validated = $request->validate([
+
+        'user_id' => 'required|exists:users,id',
+        'issue_title' => 'required|string|max:255',
+        'crop_type' => 'required|string|max:100',
+        'crop_age' => 'required|string|max:100',
+        'issue_duration' => 'required|string|max:100',
+        'description' => 'required|string',
+        'status' => 'nullable|string|max:50',
+        'assigned_expert_id' => 'nullable|exists:users,id',
+
+    ]);
+
+    $consultation = Consultation::create($validated);
+
+    return response()->json([
+        'message' => 'Consultation created successfully',
+        'data' => $consultation
+    ], 201);
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -51,16 +72,60 @@ class ConsultationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+    /**
+ * Update consultation
+ */
+public function update(Request $request, $id)
+{
+    $consultation = Consultation::findOrFail($id);
+
+    $validated = $request->validate([
+
+        'user_id' => 'sometimes|exists:users,id',
+
+        'issue_title' => 'sometimes|string|max:255',
+
+        'crop_type' => 'sometimes|string|max:100',
+
+        'crop_age' => 'sometimes|string|max:100',
+
+        'issue_duration' => 'sometimes|string|max:100',
+
+        'description' => 'sometimes|string',
+
+        'status' => 'nullable|string|max:50',
+
+        'assigned_expert_id' => 'nullable|exists:users,id',
+
+    ]);
+
+    $consultation->update($validated);
+
+    return response()->json([
+
+        'message' => 'Consultation updated successfully',
+
+        'data' => $consultation
+
+    ]);
+}
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
-    }
+    /**
+ * Delete consultation
+ */
+public function destroy($id)
+{
+    $consultation = Consultation::findOrFail($id);
+
+    $consultation->delete();
+
+    return response()->json([
+
+        'message' => 'Consultation deleted successfully'
+
+    ]);
+}
 }
