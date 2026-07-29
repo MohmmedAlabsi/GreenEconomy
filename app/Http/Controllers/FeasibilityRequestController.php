@@ -35,10 +35,41 @@ class FeasibilityRequestController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
-    }
+    /**
+ * Store a newly created feasibility request.
+ */
+public function store(Request $request)
+{
+    $validated = $request->validate([
+
+        'user_id' => 'required|exists:users,id',
+
+        'project_title' => 'required|string|max:255',
+
+        'category_id' => 'nullable|exists:categories,id',
+
+        'region_id' => 'nullable|exists:regions,id',
+
+        'estimated_budget' => 'nullable|numeric',
+
+        'land_area' => 'nullable|numeric',
+
+        'description' => 'nullable|string',
+
+        'status' => 'nullable|string|max:50',
+
+    ]);
+
+    $requestData = FeasibilityRequest::create($validated);
+
+    return response()->json([
+
+        'message' => 'Feasibility request created successfully',
+
+        'data' => $requestData
+
+    ], 201);
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -51,16 +82,60 @@ class FeasibilityRequestController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+    /**
+ * Update the specified resource.
+ */
+public function update(Request $request, string $id)
+{
+    $requestData = FeasibilityRequest::findOrFail($id);
+
+    $validated = $request->validate([
+
+        'user_id' => 'sometimes|exists:users,id',
+
+        'project_title' => 'sometimes|string|max:255',
+
+        'category_id' => 'nullable|exists:categories,id',
+
+        'region_id' => 'nullable|exists:regions,id',
+
+        'estimated_budget' => 'nullable|numeric',
+
+        'land_area' => 'nullable|numeric',
+
+        'description' => 'nullable|string',
+
+        'status' => 'nullable|string|max:50',
+
+    ]);
+
+    $requestData->update($validated);
+
+    return response()->json([
+
+        'message' => 'Feasibility request updated successfully',
+
+        'data' => $requestData
+
+    ]);
+}
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
-    }
+    /**
+ * Remove the specified resource.
+ */
+public function destroy(string $id)
+{
+    $requestData = FeasibilityRequest::findOrFail($id);
+
+    $requestData->delete();
+
+    return response()->json([
+
+        'message' => 'Feasibility request deleted successfully'
+
+    ]);
+}
 }

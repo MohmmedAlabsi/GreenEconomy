@@ -16,6 +16,7 @@ use App\Http\Controllers\PlantDiseaseController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\FieldVisitController;
 use App\Http\Controllers\PlatformSettingController;
+use App\Http\Controllers\DiseaseTreatmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +33,15 @@ Route::get('/users', [UserController::class, 'index'])
     ->name('api.users.index');
 Route::get('/users/{id}', [UserController::class, 'show'])
     ->name('api.users.show');
+
+Route::post('/users', [UserController::class, 'store'])
+    ->name('api.users.store');
+
+Route::put('/users/{id}', [UserController::class, 'update'])
+    ->name('api.users.update');
+
+Route::delete('/users/{id}', [UserController::class, 'destroy'])
+    ->name('api.users.destroy');
 
     // Users
 Route::post('/users', [UserController::class, 'store'])
@@ -65,11 +75,29 @@ Route::get('/feasibility_studies', [FeasibilityStudyController::class, 'index'])
 Route::get('/feasibility_studies/{id}', [FeasibilityStudyController::class, 'show'])
     ->name('api.feasibility-studies.show');
 
+Route::post('/feasibility_studies', [FeasibilityStudyController::class, 'store'])
+    ->name('api.feasibility-studies.store');
+
+Route::put('/feasibility_studies/{id}', [FeasibilityStudyController::class, 'update'])
+    ->name('api.feasibility-studies.update');
+
+Route::delete('/feasibility_studies/{id}', [FeasibilityStudyController::class, 'destroy'])
+    ->name('api.feasibility-studies.destroy');
+
 // Feasibility Requests
 Route::get('/feasibility_requests', [FeasibilityRequestController::class, 'index'])
     ->name('api.feasibility-requests.index');
 Route::get('/feasibility_requests/{id}', [FeasibilityRequestController::class, 'show'])
     ->name('api.feasibility-requests.show');
+
+Route::post('/feasibility_requests', [FeasibilityRequestController::class, 'store'])
+    ->name('api.feasibility-requests.store');
+
+Route::put('/feasibility_requests/{id}', [FeasibilityRequestController::class, 'update'])
+    ->name('api.feasibility-requests.update');
+
+Route::delete('/feasibility_requests/{id}', [FeasibilityRequestController::class, 'destroy'])
+    ->name('api.feasibility-requests.destroy');
 
 // Knowledge Base
 Route::get('/knowledge_base_item', [KnowledgeBaseController::class, 'index'])
@@ -77,6 +105,14 @@ Route::get('/knowledge_base_item', [KnowledgeBaseController::class, 'index'])
 Route::get('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'show'])
     ->name('api.knowledge-base.show');
 
+Route::post('/knowledge_base_item', [KnowledgeBaseController::class, 'store'])
+    ->name('api.knowledge-base.store');
+
+Route::put('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'update'])
+    ->name('api.knowledge-base.update');
+
+Route::delete('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'destroy'])
+    ->name('api.knowledge-base.destroy');
 // Plants
 Route::get('/plants', [PlantController::class, 'index'])
     ->name('api.plants.index');
@@ -88,6 +124,22 @@ Route::get('/plant_diseases', [PlantDiseaseController::class, 'index'])
     ->name('api.plant-diseases.index');
 Route::get('/plant_diseases/{id}', [PlantDiseaseController::class, 'show'])
     ->name('api.plant-diseases.show');
+
+    // Disease Treatments
+Route::get('/disease_treatments', [DiseaseTreatmentController::class, 'index'])
+    ->name('api.disease-treatments.index');
+
+Route::post('/disease_treatments', [DiseaseTreatmentController::class, 'store'])
+    ->name('api.disease-treatments.store');
+
+Route::get('/disease_treatments/{id}', [DiseaseTreatmentController::class, 'show'])
+    ->name('api.disease-treatments.show');
+
+Route::put('/disease_treatments/{id}', [DiseaseTreatmentController::class, 'update'])
+    ->name('api.disease-treatments.update');
+
+Route::delete('/disease_treatments/{id}', [DiseaseTreatmentController::class, 'destroy'])
+    ->name('api.disease-treatments.destroy');
 
 // Consultations
 Route::get('/consultations', [ConsultationController::class, 'index'])
@@ -110,6 +162,14 @@ Route::get('/field_visits', [FieldVisitController::class, 'index'])
 Route::get('/field_visits/{id}', [FieldVisitController::class, 'show'])
     ->name('api.field-visits.show');
 
+Route::post('/field_visits', [FieldVisitController::class, 'store'])
+    ->name('api.field-visits.store');
+
+Route::put('/field_visits/{id}', [FieldVisitController::class, 'update'])
+    ->name('api.field-visits.update');
+
+Route::delete('/field_visits/{id}', [FieldVisitController::class, 'destroy'])
+    ->name('api.field-visits.destroy');
 // Platform Settings
 Route::get('/platform_settings', [PlatformSettingController::class, 'index'])
     ->name('api.platform-settings.index');
