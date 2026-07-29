@@ -31,7 +31,12 @@ class RegionController extends Controller
         return response()->json($region);
     }
 
-
+    public function create()
+    {
+        return response()->json([
+            'message' => 'Create region'
+        ]);
+    }
     /**
      * Store a newly created region.
      */
@@ -50,7 +55,13 @@ class RegionController extends Controller
             'data' => $region
         ], 201);
     }
-
+    public function edit($id)
+    {
+        return response()->json([
+            'message' => 'Edit region',
+            'id' => $id
+        ]);
+    }
 
     /**
      * Update an existing region.

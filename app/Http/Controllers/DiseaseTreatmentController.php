@@ -43,8 +43,13 @@ class DiseaseTreatmentController
 
     ], 201);
 }
-
-    /**
+    public function create()
+    {
+        return response()->json([
+            'message' => 'Create disease treatment'
+        ]);
+    }
+        /**
      * Display the specified resource.
      */
     public function show(string $id)
@@ -84,6 +89,16 @@ class DiseaseTreatmentController
     ]);
 }
 
+/**
+ * Show the form for editing the specified resource.
+ */
+public function edit($id)
+{
+    return response()->json([
+        'message' => 'Edit disease treatment',
+        'id' => $id
+    ]);
+}
     /**
      * Remove the specified resource from storage.
      */

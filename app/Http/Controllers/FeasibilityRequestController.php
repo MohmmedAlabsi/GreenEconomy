@@ -28,9 +28,11 @@ class FeasibilityRequestController extends Controller
      * Show the form for creating a new resource.
      */
     public function create()
-    {
-        //
-    }
+{
+    return response()->json([
+        'message' => 'Create feasibility request'
+    ]);
+}
 
     /**
      * Store a newly created resource in storage.
@@ -74,10 +76,13 @@ public function store(Request $request)
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
-        //
-    }
+    public function edit($id)
+{
+    return response()->json([
+        'message' => 'Edit feasibility request',
+        'id' => $id
+    ]);
+}
 
     /**
      * Update the specified resource in storage.

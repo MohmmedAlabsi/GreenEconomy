@@ -31,7 +31,12 @@ class SpecializationController extends Controller
 
         return response()->json($specialization);
     }
-
+    public function create()
+    {
+        return response()->json([
+            'message' => 'Create specialization'
+        ]);
+    }
 
     /**
      * Store a new specialization.
@@ -55,7 +60,13 @@ class SpecializationController extends Controller
     }
 
 
-
+    public function edit($id)
+    {
+        return response()->json([
+            'message' => 'Edit specialization',
+            'id' => $id
+        ]);
+    }
     /**
      * Update specialization.
      */
