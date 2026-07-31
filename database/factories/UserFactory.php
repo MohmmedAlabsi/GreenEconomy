@@ -34,7 +34,7 @@ class UserFactory extends Factory
 
             'password' => static::$password ??= Hash::make('password'),
 
-            'avatar' => null,
+            'avatar' => fake()->imageUrl(200, 200, 'people'),
 
             'governorate' => fake()->randomElement([
                 'صنعاء',
@@ -51,7 +51,9 @@ class UserFactory extends Factory
                 'Wheat',
                 'Corn',
                 'Vegetables',
-                null,
+                'Dates',
+                'Olives',
+                'Tomatoes',
             ]),
 
             'membership_tier' => fake()->randomElement([

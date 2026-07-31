@@ -32,7 +32,7 @@ class FieldVisitFactory extends Factory
 
             'village_or_area' => fake()->streetName(),
 
-            'nearest_landmark' => fake()->optional()->sentence(),
+            'nearest_landmark' => fake()->sentence(),
 
             'crop_type' => fake()->randomElement([
                 'Tomato',
@@ -71,7 +71,7 @@ class FieldVisitFactory extends Factory
                 'cancelled',
             ]),
 
-            'scheduled_at' => fake()->optional()->dateTimeBetween(
+            'scheduled_at' => fake()->dateTimeBetween(
                 'now',
                 '+1 month'
             ),

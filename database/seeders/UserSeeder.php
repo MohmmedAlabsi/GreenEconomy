@@ -25,15 +25,14 @@ class UserSeeder extends Seeder
 
             'email' => 'admin@greeneconomy.com',
 
-            'password' => 'password',
-
-            'avatar' => null,
+            'password' => bcrypt('password'),
+            'avatar' => 'https://www.gravatar.com/avatar/' . md5('admin@greeneconomy.com'),
 
             'governorate' => 'صنعاء',
 
             'district' => 'التحرير',
 
-            'crop_types' => null,
+            'crop_types' => 'Coffee, Wheat, Vegetables',
 
             'membership_tier' => 'premium',
 

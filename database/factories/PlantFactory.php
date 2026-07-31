@@ -24,7 +24,7 @@ class PlantFactory extends Factory
                 'Cucumber',
             ]),
 
-            'scientific_name' => fake()->optional()->randomElement([
+            'scientific_name' => fake()->randomElement([
                 'Solanum lycopersicum',
                 'Triticum aestivum',
                 'Coffea arabica',
@@ -52,7 +52,7 @@ class PlantFactory extends Factory
 
             'category_id' => Category::inRandomOrder()->first()->id,
 
-            'image_url' => fake()->optional()->imageUrl(),
+            'image_url' => fake()->imageUrl(640, 480, 'nature'),
 
             'created_at' => now(),
 
