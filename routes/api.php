@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // استدعاء المتحكمات (Controllers)
@@ -18,6 +19,10 @@ use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\FieldVisitController;
 use App\Http\Controllers\PlatformSettingController;
 use App\Http\Controllers\AttachmentController;
+
+Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+    return $request->user();
+});
 
 /*
 |--------------------------------------------------------------------------
