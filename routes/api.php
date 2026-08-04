@@ -19,6 +19,8 @@ use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\FieldVisitController;
 use App\Http\Controllers\PlatformSettingController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Api\ForgotPasswordController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -33,6 +35,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 // المصادقة (Auth Public)
 Route::post('/register', [AuthController::class, 'register'])->name('api.auth.register');
 Route::post('/login', [AuthController::class, 'login'])->name('login'); // ضروري لمنع خطأ Route [login] not defined
+Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->name('api.forgot-password');
 
 // القواميس والمعلومات العامة (Read-Only)
 Route::get('/categories', [CategoryController::class, 'index'])->name('api.categories.index');
@@ -167,6 +170,4 @@ Route::delete('/field_visits/{id}', [FieldVisitController::class, 'destroy'])
 // Platform Settings
 Route::get('/platform_settings', [PlatformSettingController::class, 'index'])
     ->name('api.platform-settings.index');
-
-
 });
