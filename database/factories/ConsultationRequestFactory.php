@@ -18,7 +18,12 @@ class ConsultationRequestFactory extends Factory
             'user_id' => User::inRandomOrder()->first()->id,
 
             // المستشار (نتركه فارغ حاليًا)
-            'assigned_consultant_id' => null,
+            'assigned_consultant_id' => function (array $attributes) {
+                return User::where('id', '!=', $attributes['user_id'])
+                    ->inRandomOrder()
+                    ->value('id')
+                    ?? $attributes['user_id'];
+            },
 
             'subject' => fake()->randomElement([
                 'Plant disease consultation',

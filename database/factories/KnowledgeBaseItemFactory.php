@@ -42,7 +42,7 @@ class KnowledgeBaseItemFactory extends Factory
 
             'category_id' => Category::inRandomOrder()->first()->id,
 
-            'media_url' => fake()->optional()->url(),
+            'media_url' => fake()->url(),
 
             'file_size_bytes' => fake()->numberBetween(
                 10000,

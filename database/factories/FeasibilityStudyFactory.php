@@ -30,7 +30,7 @@ class FeasibilityStudyFactory extends Factory
 
             'region_id' => Region::inRandomOrder()->first()?->id,
 
-            'cover_image' => fake()->optional()->imageUrl(),
+            'cover_image' => fake()->imageUrl(640, 480, 'business'),
 
             'capital_required' => fake()->randomFloat(
                 2,
@@ -62,7 +62,7 @@ class FeasibilityStudyFactory extends Factory
                 'rejected',
             ]),
 
-            'pdf_file' => null,
+            'pdf_file' => 'documents/' . fake()->uuid() . '.pdf',
 
             'user_id' => User::inRandomOrder()->first()->id,
 

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\PlatformSetting;
+use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 
 class PlatformSettingSeeder extends Seeder
@@ -15,8 +16,8 @@ class PlatformSettingSeeder extends Seeder
                 'default_language'   => 'en',
                 'timezone'           => 'Asia/Aden',
                 'date_format'        => 'DD/MM/YYYY',
-                'production_api_key' => null,
-                'test_api_key'       => null,
+                'production_api_key' => 'prod_' . Str::random(32),
+                'test_api_key'       => 'test_' . Str::random(32),
                 'updated_at'         => now(),
             ]
         ]);

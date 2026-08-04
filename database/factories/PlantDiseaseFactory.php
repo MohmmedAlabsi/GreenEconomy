@@ -21,7 +21,7 @@ class PlantDiseaseFactory extends Factory
                 'Rust Disease',
             ]),
 
-            'scientific_name' => fake()->optional()->randomElement([
+            'scientific_name' => fake()->randomElement([
                 'Erysiphe spp.',
                 'Fusarium oxysporum',
                 'Pythium spp.',
@@ -39,7 +39,7 @@ class PlantDiseaseFactory extends Factory
 
             'cause_description' => fake()->paragraph(),
 
-            'image_url' => fake()->optional()->imageUrl(),
+            'image_url' => fake()->imageUrl(640, 480, 'business'),
 
             'created_at' => now(),
 

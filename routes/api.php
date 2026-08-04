@@ -1,8 +1,9 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// استدعاء المتحكمات
+// استدعاء المتحكمات (Controllers)
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RegionController;
@@ -13,67 +14,60 @@ use App\Http\Controllers\FeasibilityRequestController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\PlantController;
 use App\Http\Controllers\PlantDiseaseController;
+use App\Http\Controllers\DiseaseTreatmentController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\FieldVisitController;
 use App\Http\Controllers\PlatformSettingController;
-use App\Http\Controllers\DiseaseTreatmentController;
+use App\Http\Controllers\AttachmentController;
+
+Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+    return $request->user();
+});
 
 /*
 |--------------------------------------------------------------------------
-| API Routes - Read Only Operations
+| Public Routes (المسارات العامة - لا تتطلب تسجيل دخول)
 |--------------------------------------------------------------------------
 */
 
-// Auth
-Route::get('/auth/me', [AuthController::class, 'me'])
-    ->name('api.auth.me');
+// المصادقة (Auth Public)
+Route::post('/register', [AuthController::class, 'register'])->name('api.auth.register');
+Route::post('/login', [AuthController::class, 'login'])->name('login'); // ضروري لمنع خطأ Route [login] not defined
 
-// Users
-Route::get('/users', [UserController::class, 'index'])
-    ->name('api.users.index');
-Route::get('/users/{id}', [UserController::class, 'show'])
-    ->name('api.users.show');
+// القواميس والمعلومات العامة (Read-Only)
+Route::get('/categories', [CategoryController::class, 'index'])->name('api.categories.index');
+Route::get('/categories/{id}', [CategoryController::class, 'show'])->name('api.categories.show');
 
-Route::post('/users', [UserController::class, 'store'])
-    ->name('api.users.store');
+Route::get('/regions', [RegionController::class, 'index'])->name('api.regions.index');
+Route::get('/regions/{id}', [RegionController::class, 'show'])->name('api.regions.show');
 
-Route::put('/users/{id}', [UserController::class, 'update'])
-    ->name('api.users.update');
+Route::get('/specializations', [SpecializationController::class, 'index'])->name('api.specializations.index');
+Route::get('/specializations/{id}', [SpecializationController::class, 'show'])->name('api.specializations.show');
 
-Route::delete('/users/{id}', [UserController::class, 'destroy'])
-    ->name('api.users.destroy');
+Route::get('/plants', [PlantController::class, 'index'])->name('api.plants.index');
+Route::get('/plants/{id}', [PlantController::class, 'show'])->name('api.plants.show');
 
-    // Users
-Route::post('/users', [UserController::class, 'store'])
-    ->name('api.users.store');
-Route::put('/users/{id}', [UserController::class, 'update'])
-    ->name('api.users.update');
-Route::delete('/users/{id}', [UserController::class, 'destroy'])
-    ->name('api.users.destroy');
+Route::get('/knowledge_base_item', [KnowledgeBaseController::class, 'index'])->name('api.knowledge-base.index');
+Route::get('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'show'])->name('api.knowledge-base.show');
 
-// Regions
-Route::get('/regions', [RegionController::class, 'index'])
-    ->name('api.regions.index');
-Route::get('/regions/{id}', [RegionController::class, 'show'])
-    ->name('api.regions.show');
+Route::get('/platform_settings', [PlatformSettingController::class, 'index'])->name('api.platform-settings.index');
 
-// Categories
-Route::get('/categories', [CategoryController::class, 'index'])
-    ->name('api.categories.index');
-Route::get('/categories/{id}', [CategoryController::class, 'show'])
-    ->name('api.categories.show');
 
-// Specializations
-Route::get('/specializations', [SpecializationController::class, 'index'])
-    ->name('api.specializations.index');
-Route::get('/specializations/{id}', [SpecializationController::class, 'show'])
-    ->name('api.specializations.show');
+/*
+|--------------------------------------------------------------------------
+| Protected Routes (المسارات المحمية - تتطلب توكين Sanctum)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:sanctum')->group(function () {
 
-// Feasibility Studies
-Route::get('/feasibility_studies', [FeasibilityStudyController::class, 'index'])
-    ->name('api.feasibility-studies.index');
-Route::get('/feasibility_studies/{id}', [FeasibilityStudyController::class, 'show'])
-    ->name('api.feasibility-studies.show');
+    // إدارة الجلسة والمستخدم الحالي
+    Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
+    Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
+    
+    // إدارة المرفقات (Attachments)
+    Route::post('/attachments', [AttachmentController::class, 'store'])->name('api.attachments.store');
+    Route::get('/attachments/{id}', [AttachmentController::class, 'show'])->name('api.attachments.show');
+    Route::delete('/attachments/{id}', [AttachmentController::class, 'destroy'])->name('api.attachments.destroy');
 
 Route::post('/feasibility_studies', [FeasibilityStudyController::class, 'store'])
     ->name('api.feasibility-studies.store');
@@ -175,4 +169,4 @@ Route::get('/platform_settings', [PlatformSettingController::class, 'index'])
     ->name('api.platform-settings.index');
 
 
-require __DIR__ . '/auth.php';
+});

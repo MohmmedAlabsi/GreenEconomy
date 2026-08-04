@@ -53,11 +53,10 @@ class DiseaseTreatmentController
      * Display the specified resource.
      */
     public function show(string $id)
-{
-    $treatment = DiseaseTreatment::with('disease')->findOrFail($id);
-
-    return response()->json($treatment);
-}
+    {
+        $treatment = DiseaseTreatment::with('disease')->findOrFail($id);
+        return response()->json($treatment);
+    }
 
     /**
      * Update the specified resource in storage.

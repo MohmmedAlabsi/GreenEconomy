@@ -13,7 +13,7 @@ class ConsultationFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'user_id' => User::query()->inRandomOrder()->value('id'),
 
             'issue_title' => fake()->sentence(),
 
@@ -43,7 +43,12 @@ class ConsultationFactory extends Factory
                 'rejected',
             ]),
 
-            'assigned_expert_id' => null,
+            'assigned_expert_id' => function (array $attributes) {
+                return User::where('id', '!=', $attributes['user_id'])
+                    ->inRandomOrder()
+                    ->value('id')
+                    ?? $attributes['user_id'];
+            },
 
             'created_at' => now(),
 
