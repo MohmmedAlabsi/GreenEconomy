@@ -173,3 +173,6 @@ Route::delete('/field_visits/{id}', [FieldVisitController::class, 'destroy'])
 // Platform Settings
 Route::get('/platform_settings', [PlatformSettingController::class, 'index'])
     ->name('api.platform-settings.index');
+
+
+require __DIR__ . '/auth.php';
