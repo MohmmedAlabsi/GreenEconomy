@@ -1,5 +1,5 @@
 <?php
-
+//api file for forgot password
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
