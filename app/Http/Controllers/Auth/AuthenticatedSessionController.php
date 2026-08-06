@@ -26,14 +26,15 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function logout(Request $request)
     {
         if ($request->user() && $request->user()->currentAccessToken()) {
             $request->user()->currentAccessToken()->delete();
         }
 
-        return redirect()
-            ->route('login')
-            ->with('status', 'تم تسجيل الخروج بنجاح');
+        return redirect() -> json([
+            'status' => 'success',
+            'message' => 'تم تسجيل الخروج بنجاح'
+        ],200);
     }
 }
