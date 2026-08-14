@@ -21,21 +21,22 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password', 255);
             $table->string('avatar', 255)->nullable();
-            $table->string('governorate', 100)->nullable();
             $table->string('district', 100)->nullable();
-            $table->string('crop_types', 255)->nullable();
             $table->string('membership_tier', 50)->nullable()->default('standard');
             $table->string('status', 50)->default('active');
             $table->boolean('identity_verified')->nullable();
+            
             $table->unsignedBigInteger('role_id')->nullable();
             $table->foreign('role_id')->references('id')->on('roles');
+
             $table->unsignedBigInteger('region_id')->nullable();
             $table->foreign('region_id')->references('id')->on('regions');
+
             $table->unsignedBigInteger('specialization_id')->nullable();
             $table->foreign('specialization_id')->references('id')->on('specializations');
+
             $table->string('remember_token', 100)->nullable();
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+            $table->timestamps();
         });
 
         Schema::enableForeignKeyConstraints();

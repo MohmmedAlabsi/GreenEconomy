@@ -13,8 +13,12 @@ class KnowledgeBaseController extends Controller
      */
     public function index()
     {
-        $items = KnowledgeBaseItem::with(['category', 'user'])->where('status', 'published')->latest()->paginate(12);
-        return response()->json($items);
+        $items = KnowledgeBaseItem::with(['category', 'user'])->latest()->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $items
+        ]);
     }
 
     // عرض مقال أو عنصر محدد

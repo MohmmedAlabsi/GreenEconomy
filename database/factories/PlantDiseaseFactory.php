@@ -12,37 +12,39 @@ class PlantDiseaseFactory extends Factory
     public function definition(): array
     {
         return [
-
             'name' => fake()->randomElement([
-                'Powdery Mildew',
-                'Leaf Blight',
-                'Root Rot',
-                'Bacterial Wilt',
-                'Rust Disease',
+                'اللفحة المتأخرة',
+                'البياض الدقيقي',
+                'عفن الجذور الفطري',
+                'الذبول البكتيري',
+                'صدأ الأوراق',
             ]),
 
             'scientific_name' => fake()->randomElement([
+                'Phytophthora infestans',
                 'Erysiphe spp.',
                 'Fusarium oxysporum',
                 'Pythium spp.',
                 'Xanthomonas spp.',
             ]),
 
-            'type' => fake()->randomElement([
-                'fungal',
-                'bacterial',
-                'viral',
-                'environmental',
-            ]),
+            'plant_type' => fake()->randomElement(['طماطم', 'بطاطس', 'خيار', 'قُمح', 'عنب']),
+
+            'type' => fake()->randomElement(['فطري', 'بكتيري', 'فيروسي', 'حشري']),
+
+            'severity_level' => fake()->randomElement(['منخفض', 'متوسط', 'عالي']),
+
+            'spread_rate' => fake()->randomElement(['بطيء', 'متوسط', 'سريع']),
+
+            'farmer_visibility' => fake()->randomElement(['مرئي للمزارعين', 'مخفي']),
 
             'symptoms' => fake()->paragraph(),
 
             'cause_description' => fake()->paragraph(),
 
-            'image_url' => fake()->imageUrl(640, 480, 'business'),
+            'image_url' => 'https://picsum.photos/640/480',
 
             'created_at' => now(),
-
             'updated_at' => now(),
         ];
     }

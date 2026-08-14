@@ -36,25 +36,7 @@ class UserFactory extends Factory
 
             'avatar' => fake()->imageUrl(200, 200, 'people'),
 
-            'governorate' => fake()->randomElement([
-                'صنعاء',
-                'عدن',
-                'تعز',
-                'إب',
-                'الحديدة',
-            ]),
-
             'district' => fake()->city(),
-
-            'crop_types' => fake()->randomElement([
-                'Coffee',
-                'Wheat',
-                'Corn',
-                'Vegetables',
-                'Dates',
-                'Olives',
-                'Tomatoes',
-            ]),
 
             'membership_tier' => fake()->randomElement([
                 'standard',

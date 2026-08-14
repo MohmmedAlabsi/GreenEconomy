@@ -15,14 +15,17 @@ return new class extends Migration
 
         Schema::create('plant_diseases', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
-            $table->string('scientific_name', 255)->nullable();
-            $table->string('type', 50);
-            $table->text('symptoms');
-            $table->text('cause_description')->nullable();
-            $table->string('image_url', 255)->nullable();
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+            $table->string('name', 255);                              // اسم المرض
+            $table->string('scientific_name', 255)->nullable();       // الاسم العلمي
+            $table->string('plant_type', 255)->nullable();            // نوع المحصول / النبات
+            $table->string('type', 100)->nullable();                  // التصنيف (فطري، بكتيري...)
+            $table->string('severity_level', 50)->nullable();        // مستوى الخطورة
+            $table->string('spread_rate', 50)->nullable();           // سرعة انتشار المرض
+            $table->string('farmer_visibility', 100)->default('مرئي للمزارعين'); // العرض للمزارعين
+            $table->text('symptoms');                                // وصف تفصيلي للأعراض
+            $table->text('cause_description')->nullable();           // أسباب المرض
+            $table->string('image_url', 255)->nullable();             // مسار الصورة المحفوظة
+            $table->timestamps();
         });
 
         Schema::enableForeignKeyConstraints();

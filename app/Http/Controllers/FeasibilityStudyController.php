@@ -11,11 +11,25 @@ class FeasibilityStudyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $studies = FeasibilityStudy::with(['category', 'region', 'user'])->latest()->paginate(10);
-        return response()->json($studies);
+public function index(Request $request)
+{
+    $query = FeasibilityStudy::with(['category', 'region']);
+
+    // تطبيق فلتر الحالة إن وجد
+    if ($request->filled('status') && $request->status !== 'all') {
+        $query->where('status', $request->status);
     }
+
+    // تطبيق البحث بالاسم إن وجد
+    if ($request->filled('search')) {
+        $query->where('title', 'like', '%' . $request->search . '%');
+    }
+
+    // إرجاع الترقيم القياسي (10 عناصر لكل صفحة)
+    $studies = $query->latest()->paginate(10);
+
+    return response()->json($studies);
+}
 
     // عرض تفاصيل دراسة جدوى محددة
     public function show($id)

@@ -9,12 +9,12 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\UserPreference;
 use Spatie\Permission\Traits\HasRoles;
 
-
 class User extends Authenticatable
 {
-   use HasApiTokens,HasRoles, Notifiable;
-   use HasFactory;
-   protected $guard_name = "api";
+    use HasApiTokens, HasRoles, Notifiable;
+    use HasFactory;
+
+    protected $guard_name = "api";
 
     protected $fillable = [
         'name',
@@ -23,9 +23,7 @@ class User extends Authenticatable
         'email_verified_at',
         'password',
         'avatar',
-        'governorate',
         'district',
-        'crop_types',
         'membership_tier',
         'status',
         'identity_verified',
@@ -59,7 +57,8 @@ class User extends Authenticatable
         return $this->belongsTo(Specialization::class);
     }
 
-    public function preference()
+    // تعديل الاسم إلى صيغة الجمع لتتوافق مع معايير Laravel Eloquent
+    public function preferences()
     {
         return $this->hasOne(UserPreference::class);
     }
@@ -78,7 +77,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(KnowledgeBaseItem::class);
     }
-    public function Consultation()
+
+    // تعديل الاسم إلى الحرف الصغير وصيغة الجمع consultations
+    public function consultations()
     {
         return $this->hasMany(Consultation::class);
     }

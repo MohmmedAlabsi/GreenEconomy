@@ -6,19 +6,23 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
     /**
-     * تسجيل حساب جديد في جدول users
+     * تسجيل حساب جديد في جدول users وإسناد دور Spatie تلقائياً
      */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'phone'    => 'nullable|string|max:20',
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|string|email|max:255|unique:users',
+            'password'  => 'required|string|min:8|confirmed',
+            'phone'     => 'nullable|string|max:20',
+            'role_id'   => 'required|exists:roles,id',
+            'region_id' => 'required|exists:regions,id',
+            'district'  => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -28,13 +32,22 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // إنشاء المستخدم داخل جدول users
+        // 1. إنشاء المستخدم داخل جدول users
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'phone'    => $request->phone,
+            'name'      => $request->name,
+            'email'     => $request->email,
+            'password'  => Hash::make($request->password),
+            'phone'     => $request->phone,
+            'role_id'   => $request->role_id,
+            'region_id' => $request->region_id,
+            'district'  => $request->district,
         ]);
+
+        // 2. 👈 إسناد الدور في جدول Spatie (model_has_roles) تلقائياً
+        $role = Role::findById($request->role_id, 'api');
+        if ($role) {
+            $user->assignRole($role);
+        }
 
         // إنتاج Sanctum Token فور التسجيل
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -44,7 +57,7 @@ class AuthController extends Controller
             'message'      => 'تم إنشاء الحساب بنجاح',
             'access_token' => $token,
             'token_type'   => 'Bearer',
-            'user'         => $user
+            'user'         => $user->load(['role', 'roles']) // إرجاع العلاقتين للـ Frontend
         ], 201);
     }
 
@@ -78,7 +91,7 @@ class AuthController extends Controller
             'message'      => 'تم تسجيل الدخول بنجاح',
             'access_token' => $token,
             'token_type'   => 'Bearer',
-            'user'         => $user
+            'user'         => $user->load(['role', 'roles'])
         ], 200);
     }
 
@@ -88,9 +101,9 @@ class AuthController extends Controller
             $request->user()->currentAccessToken()->delete();
         }
 
-        return redirect() -> json([
-            'status' => 'success',
+        return response()->json([
+            'status'  => true,
             'message' => 'تم تسجيل الخروج بنجاح'
-        ],200);
+        ], 200);
     }
 }
