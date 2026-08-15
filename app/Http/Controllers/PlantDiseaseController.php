@@ -36,7 +36,7 @@ class PlantDiseaseController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'name'              => 'required|string|max:255',
             'scientific_name'   => 'nullable|string|max:255',
             'plant_type'        => 'nullable|string|max:255',
@@ -46,14 +46,21 @@ class PlantDiseaseController extends Controller
             'farmer_visibility' => 'nullable|string|max:100',
             'symptoms'          => 'required|string',
             'cause_description' => 'nullable|string',
-            'image_url'             => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096', // ملف الصورة
-        ]);
+        ];
 
-        // معالجة رفع الصورة وحفظ مسارها في image_url
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('plant_diseases', 'public');
-            $validated['image_url'] = 'storage/' . $path;
+            $rules['image'] = 'image|mimes:jpeg,png,jpg,webp|max:4096';
         }
+
+        $validated = $request->validate($rules);
+
+        if ($request->hasFile('image')) {
+            // تخزين المسار النسبى الخام داخل القرص العام
+            $path = $request->file('image')->store('plant_diseases', 'public');
+            $validated['image_url'] = $path;
+        }
+
+        unset($validated['image']);
 
         $disease = PlantDisease::create($validated);
 
@@ -70,7 +77,7 @@ class PlantDiseaseController extends Controller
     {
         $disease = PlantDisease::findOrFail($id);
 
-        $validated = $request->validate([
+        $rules = [
             'name'              => 'sometimes|string|max:255',
             'scientific_name'   => 'nullable|string|max:255',
             'plant_type'        => 'nullable|string|max:255',
@@ -80,19 +87,27 @@ class PlantDiseaseController extends Controller
             'farmer_visibility' => 'nullable|string|max:100',
             'symptoms'          => 'sometimes|string',
             'cause_description' => 'nullable|string',
-            'image_url'             => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
-        ]);
+        ];
 
-        // عند رفع صورة جديدة: إزالة الصورة القديمة ورفع الجديدة
         if ($request->hasFile('image')) {
-            if ($disease->image_url) {
-                $oldPath = str_replace('storage/', '', parse_url($disease->image_url, PHP_URL_PATH));
-                Storage::disk('public')->delete($oldPath);
+            $rules['image'] = 'image|mimes:jpeg,png,jpg,webp|max:4096';
+        }
+
+        $validated = $request->validate($rules);
+
+        if ($request->hasFile('image')) {
+            // جلب القيمة الخام للمسار من قاعدة البيانات مباشرة بدلاً من الرابط الكامل
+            $rawImagePath = $disease->getRawOriginal('image_url');
+
+            if ($rawImagePath) {
+                Storage::disk('public')->delete($rawImagePath);
             }
 
             $path = $request->file('image')->store('plant_diseases', 'public');
-            $validated['image_url'] = 'storage/' . $path;
+            $validated['image_url'] = $path;
         }
+
+        unset($validated['image']);
 
         $disease->update($validated);
 
@@ -109,10 +124,10 @@ class PlantDiseaseController extends Controller
     {
         $disease = PlantDisease::findOrFail($id);
 
-        // حذف الصورة الفيزيائية من التخزين عند حذف السجل
-        if ($disease->image_url) {
-            $path = str_replace('storage/', '', parse_url($disease->image_url, PHP_URL_PATH));
-            Storage::disk('public')->delete($path);
+        $rawImagePath = $disease->getRawOriginal('image_url');
+
+        if ($rawImagePath) {
+            Storage::disk('public')->delete($rawImagePath);
         }
 
         $disease->delete();
