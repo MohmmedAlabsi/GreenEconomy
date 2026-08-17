@@ -53,9 +53,7 @@ class KnowledgeBaseItemFactory extends Factory
                 0,
                 5000
             ),
-
-            'user_id' => User::inRandomOrder()->first()->id,
-
+            
             'created_at' => now(),
 
             'updated_at' => now(),

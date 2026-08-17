@@ -83,6 +83,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('plant_diseases', PlantDiseaseController::class);
     Route::apiResource('disease_treatments', DiseaseTreatmentController::class);
     Route::apiResource('field_visits', FieldVisitController::class);
+    Route::apiResource('plants',PlantController::class);
 
     Route::middleware(['role:Admin|Agricultural Expert'])->group(function () {
         Route::post('/knowledge_base_item', [KnowledgeBaseController::class, 'store'])->name('api.knowledge-base.store');
