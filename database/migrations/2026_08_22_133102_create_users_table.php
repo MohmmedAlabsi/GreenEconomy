@@ -27,15 +27,13 @@ return new class extends Migration
             $table->boolean('identity_verified')->nullable();
             
             $table->unsignedBigInteger('role_id')->nullable();
-            $table->foreign('role_id')->references('id')->on('roles');
+            $table->foreign('role_id')->references('id')->on('roles')->nullOnDelete();
 
             $table->unsignedBigInteger('region_id')->nullable();
-            $table->foreign('region_id')->references('id')->on('regions');
-
-            $table->unsignedBigInteger('specialization_id')->nullable();
-            $table->foreign('specialization_id')->references('id')->on('specializations');
+            $table->foreign('region_id')->references('id')->on('regions')->nullOnDelete();
 
             $table->string('remember_token', 100)->nullable();
+            $table->softDeletes(); // إضافة عمود deleted_at مباشرة هنا
             $table->timestamps();
         });
 

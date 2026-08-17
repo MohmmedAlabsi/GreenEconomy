@@ -20,7 +20,7 @@ class DiseaseTreatmentController
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-{
+    {
     $validated = $request->validate([
 
         'disease_id' => 'required|exists:plant_diseases,id',
@@ -42,7 +42,7 @@ class DiseaseTreatmentController
         'data' => $treatment
 
     ], 201);
-}
+    }
     public function create()
     {
         return response()->json([

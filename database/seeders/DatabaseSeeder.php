@@ -43,8 +43,7 @@ class DatabaseSeeder extends Seeder
             FieldVisitSeeder::class,
             KnowledgeBaseItemSeeder::class,
             PlantSeeder::class,
-            
-            
+            EngineerProfileSeeder::class,            
             
 
 

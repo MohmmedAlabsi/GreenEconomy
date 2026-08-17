@@ -54,8 +54,6 @@ class UserFactory extends Factory
 
             'region_id' => Region::query()->inRandomOrder()->value('id'),
 
-            'specialization_id' => Specialization::query()->inRandomOrder()->value('id'),
-
             'remember_token' => Str::random(10),
         ];
     }

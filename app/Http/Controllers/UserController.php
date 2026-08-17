@@ -6,15 +6,41 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Routing\Controller;
 use Spatie\Permission\Models\Role;
+use Illuminate\Database\QueryException;
 
 class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with(['role', 'roles', 'region', 'specialization'])->paginate(15);
+        $query = User::with(['region', 'role']);
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('district', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('role_id')) {
+            $query->where('role_id', $request->input('role_id'));
+        }
+
+        if ($request->filled('region_id')) {
+            $query->where('region_id', $request->input('region_id'));
+        }
+
+        $users = $query->latest()->paginate(10);
+
         return response()->json($users);
     }
 
@@ -23,7 +49,15 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['role', 'roles', 'region', 'specialization', 'preferences', 'consultations'])->findOrFail($id);
+        $user = User::with([
+            'role', 
+            'roles', 
+            'region', 
+            'engineerProfile.specialization', 
+            'preferences', 
+            'consultations'
+        ])->findOrFail($id);
+
         return response()->json($user);
     }
 
@@ -38,24 +72,21 @@ class UserController extends Controller
             'email'             => 'nullable|email|max:255|unique:users,email',
             'password'          => 'required|string|min:8',
             'avatar'            => 'nullable|string|max:255',
-            'governorate'       => 'nullable|string|max:100',
             'district'          => 'nullable|string|max:100',
             'membership_tier'   => 'nullable|string|max:50',
             'status'            => 'nullable|string|max:50',
             'identity_verified' => 'nullable|boolean',
             'role_id'           => 'nullable|exists:roles,id',
             'region_id'         => 'nullable|exists:regions,id',
-            'specialization_id' => 'nullable|exists:specializations,id',
         ]);
 
         $validated['password'] = bcrypt($validated['password']);
 
-        // 1. إنشاء المستخدم في قاعدة البيانات
         $user = User::create($validated);
 
-        // 2. 👈 إسناد دور Spatie تلقائياً إذا تم إرسال role_id
+        // البحث عن الدور بـ ID المباشر لتجنب تعارض الـ guard
         if (!empty($validated['role_id'])) {
-            $role = Role::findById($validated['role_id'], 'api');
+            $role = Role::find($validated['role_id']);
             if ($role) {
                 $user->assignRole($role);
             }
@@ -63,7 +94,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'User created successfully',
-            'data'    => $user->load(['role', 'roles'])
+            'data'    => $user->load(['role', 'roles', 'region', 'engineerProfile.specialization'])
         ], 201);
     }
 
@@ -86,7 +117,6 @@ class UserController extends Controller
             'identity_verified' => 'nullable|boolean',
             'role_id'           => 'nullable|exists:roles,id',
             'region_id'         => 'nullable|exists:regions,id',
-            'specialization_id' => 'nullable|exists:specializations,id',
         ]);
 
         if (isset($validated['password'])) {
@@ -95,35 +125,63 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        // 3. 👈 تحديث دور Spatie مع حذف الدور القديم واستبداله بـ syncRoles
         if (array_key_exists('role_id', $validated)) {
             if ($validated['role_id']) {
-                $role = Role::findById($validated['role_id'], 'api');
+                $role = Role::find($validated['role_id']);
                 if ($role) {
                     $user->syncRoles([$role]);
                 }
             } else {
-                $user->syncRoles([]); // إلغاء الدور إذا تم إرسال role_id كـ null
+                $user->syncRoles([]);
             }
         }
 
         return response()->json([
             'message' => 'User updated successfully',
-            'data'    => $user->load(['role', 'roles'])
+            'data'    => $user->load(['role', 'roles', 'region', 'engineerProfile.specialization'])
         ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+    try {
         $user = User::findOrFail($id);
 
+        // 1. منع المستخدم من حذف نفسه
+        if ($request->user() && $request->user()->id == $user->id) {
+            return response()->json([
+                'message' => 'لا يمكنك حذف حسابك الشخصي المسجل به حالياً.'
+            ], 422);
+        }
+
+        // 2. حذف/فك ارتباط العلاقات المباشرة لتفادي تعارض Foreign Key
+        if (method_exists($user, 'consultations')) {
+            $user->consultations()->delete();
+        }
+        if (method_exists($user, 'engineerProfile')) {
+            $user->engineerProfile()->delete();
+        }
+        if (method_exists($user, 'preferences')) {
+            $user->preferences()->delete();
+        }
+        
+        // فك ارتباط الأدوار (Spatie Permissions)
+        $user->syncRoles([]);
+
+        // 3. تنفيذ الحذف النهائي
         $user->delete();
 
         return response()->json([
-            'message' => 'User deleted successfully'
-        ]);
+            'message' => 'تم حذف المستخدم وكافة سجلاته المرتبطة بنجاح.'
+        ], 200);
+
+    } catch (QueryException $e) {
+        return response()->json([
+            'message' => 'تعذر الحذف لوجود سجلات أخرى مرتبطة لا يمكن إزالتها تلقائياً.'
+        ], 400);
+    }
     }
 }

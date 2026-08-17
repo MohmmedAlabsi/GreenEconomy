@@ -8,11 +8,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\UserPreference;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasRoles, Notifiable;
-    use HasFactory;
+    use HasApiTokens, HasRoles, Notifiable, HasFactory , SoftDeletes;
 
     protected $guard_name = "api";
 
@@ -29,7 +29,6 @@ class User extends Authenticatable
         'identity_verified',
         'role_id',
         'region_id',
-        'specialization_id',
     ];
 
     protected $hidden = [
@@ -42,6 +41,12 @@ class User extends Authenticatable
         'identity_verified' => 'boolean',
     ];
 
+    // العلاقة مع ملف المهندس (إضافة حديثة)
+    public function engineerProfile()
+    {
+        return $this->hasOne(EngineerProfile::class);
+    }
+
     public function role()
     {
         return $this->belongsTo(Role::class);
@@ -52,12 +57,6 @@ class User extends Authenticatable
         return $this->belongsTo(Region::class);
     }
 
-    public function specialization()
-    {
-        return $this->belongsTo(Specialization::class);
-    }
-
-    // تعديل الاسم إلى صيغة الجمع لتتوافق مع معايير Laravel Eloquent
     public function preferences()
     {
         return $this->hasOne(UserPreference::class);
@@ -78,7 +77,6 @@ class User extends Authenticatable
         return $this->hasMany(KnowledgeBaseItem::class);
     }
 
-    // تعديل الاسم إلى الحرف الصغير وصيغة الجمع consultations
     public function consultations()
     {
         return $this->hasMany(Consultation::class);

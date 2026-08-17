@@ -39,8 +39,6 @@ class UserSeeder extends Seeder
             'role_id' => Role::query()->first()?->id,
 
             'region_id' => Region::query()->first()?->id,
-
-            'specialization_id' => Specialization::query()->first()?->id,
         ]);
 
         // إنشاء 50 مستخدم تجريبي

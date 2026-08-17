@@ -20,7 +20,7 @@ use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\FieldVisitController;
 use App\Http\Controllers\PlatformSettingController;
 use App\Http\Controllers\AttachmentController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\RoleController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -64,6 +64,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware(['role:Admin'])->group(function () {
         Route::apiResource('users', UserController::class);
+        Route::apiResource('roles', RoleController::class);
         Route::put('/platform_settings', [PlatformSettingController::class, 'update'])->name('api.platform-settings.update');
     });
 
