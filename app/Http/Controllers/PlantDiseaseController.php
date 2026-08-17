@@ -48,19 +48,19 @@ class PlantDiseaseController extends Controller
             'cause_description' => 'nullable|string',
         ];
 
-        if ($request->hasFile('image_url')) {
-            $rules['image_url'] = 'image|mimes:jpeg,png,jpg,webp|max:4096';
+        if ($request->hasFile('image')) {
+            $rules['image'] = 'image|mimes:jpeg,png,jpg,webp|max:4096';
         }
 
         $validated = $request->validate($rules);
 
-        if ($request->hasFile('image_url')) {
+        if ($request->hasFile('image')) {
             // تخزين المسار النسبى الخام داخل القرص العام
             $path = $request->file('image')->store('plant_diseases', 'public');
             $validated['image_url'] = $path;
         }
 
-        unset($validated['image_url']);
+        unset($validated['image']);
 
         $disease = PlantDisease::create($validated);
 
@@ -89,13 +89,13 @@ class PlantDiseaseController extends Controller
             'cause_description' => 'nullable|string',
         ];
 
-        if ($request->hasFile('image_url')) {
-            $rules['image_url'] = 'image|mimes:jpeg,png,jpg,webp|max:4096';
+        if ($request->hasFile('image')) {
+            $rules['image'] = 'image|mimes:jpeg,png,jpg,webp|max:4096';
         }
 
         $validated = $request->validate($rules);
 
-        if ($request->hasFile('image_url')) {
+        if ($request->hasFile('image')) {
             // جلب القيمة الخام للمسار من قاعدة البيانات مباشرة بدلاً من الرابط الكامل
             $rawImagePath = $disease->getRawOriginal('image_url');
 
@@ -103,11 +103,11 @@ class PlantDiseaseController extends Controller
                 Storage::disk('public')->delete($rawImagePath);
             }
 
-            $path = $request->file('image_url')->store('plant_diseases', 'public');
+            $path = $request->file('image')->store('plant_diseases', 'public');
             $validated['image_url'] = $path;
         }
 
-        unset($validated['image_url']);
+        unset($validated['image']);
 
         $disease->update($validated);
 
