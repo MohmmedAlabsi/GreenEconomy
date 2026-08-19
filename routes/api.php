@@ -21,6 +21,7 @@ use App\Http\Controllers\FieldVisitController;
 use App\Http\Controllers\PlatformSettingController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\NotificationController; // <--- تم استدعاء كنترولر الإشعارات
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -28,7 +29,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes (المسارات العامة - لا تتطلب تسجيل دخول)
+| Public Routes (المسارات العامة)
 |--------------------------------------------------------------------------
 */
 
@@ -54,7 +55,7 @@ Route::get('/platform_settings', [PlatformSettingController::class, 'index'])->n
 
 /*
 |--------------------------------------------------------------------------
-| Protected Routes (المسارات المحمية - تتطلب توكين Sanctum)
+| Protected Routes (المسارات المحمية بتوكين Sanctum)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -62,10 +63,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
 
+    // مسارات الأدمن الإدارية
     Route::middleware(['role:Admin'])->group(function () {
         Route::apiResource('users', UserController::class);
         Route::apiResource('roles', RoleController::class);
         Route::put('/platform_settings', [PlatformSettingController::class, 'update'])->name('api.platform-settings.update');
+        
+        // <--- إضافة مسارات الإشعارات الإدارية (تُعالج خطأ 404)
+        Route::prefix('admin/notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::post('/send', [NotificationController::class, 'send']);
+            Route::patch('/{id}/read', [NotificationController::class, 'markAsRead']);
+        });
     });
 
     Route::middleware(['permission:manage consultations|answer consultations'])->group(function () {
@@ -82,8 +91,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::apiResource('plant_diseases', PlantDiseaseController::class);
     Route::apiResource('disease_treatments', DiseaseTreatmentController::class);
+
+    // إدارة الزيارات الميدانية ومراحل الرحلة
     Route::apiResource('field_visits', FieldVisitController::class);
-    Route::apiResource('plants',PlantController::class);
+    Route::prefix('field_visits')->group(function () {
+        Route::patch('{id}/assign', [FieldVisitController::class, 'assignEngineer']);
+        Route::patch('{id}/estimate', [FieldVisitController::class, 'submitEstimate']);
+        Route::post('{id}/report', [FieldVisitController::class, 'submitReport']);
+        Route::post('{id}/rating', [FieldVisitController::class, 'submitRating']);
+    });
 
     Route::middleware(['role:Admin|Agricultural Expert'])->group(function () {
         Route::post('/knowledge_base_item', [KnowledgeBaseController::class, 'store'])->name('api.knowledge-base.store');
@@ -91,6 +107,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'destroy'])->name('api.knowledge-base.destroy');
     });
 
+    // المرفقات
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('api.attachments.store');
     Route::get('/attachments/{id}', [AttachmentController::class, 'show'])->name('api.attachments.show');
     Route::delete('/attachments/{id}', [AttachmentController::class, 'destroy'])->name('api.attachments.destroy');
