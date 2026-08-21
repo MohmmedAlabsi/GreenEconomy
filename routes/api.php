@@ -21,7 +21,9 @@ use App\Http\Controllers\FieldVisitController;
 use App\Http\Controllers\PlatformSettingController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\NotificationController; // <--- تم استدعاء كنترولر الإشعارات
+use App\Http\Controllers\NotificationController; 
+use App\Http\Controllers\EngineerProfileController;
+use App\Http\Controllers\FieldVisitReportController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -63,6 +65,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
 
+    // مسارات التقارير التشخيصية للزيارات الميدانية (محمية بالكامل)
+    Route::get('/field_visit_reports', [FieldVisitReportController::class, 'index']);
+    Route::post('/field_visits/{id}/report', [FieldVisitReportController::class, 'store']);
+
+    Route::put('/users/{id}', [UserController::class, 'update']);
     // مسارات الأدمن الإدارية
     Route::middleware(['role:Admin'])->group(function () {
         Route::apiResource('users', UserController::class);
@@ -81,7 +88,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('consultations', ConsultationController::class);
     });
 
-    Route::middleware(['permission:manage feasibility studies'])->group(function () {
+    Route::middleware(['permission:manage feasibility studies|show feasibility studies'])->group(function () {
         Route::apiResource('feasibility_studies', FeasibilityStudyController::class);
     });
 
@@ -106,6 +113,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'update'])->name('api.knowledge-base.update');
         Route::delete('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'destroy'])->name('api.knowledge-base.destroy');
     });
+
+    Route::get('/engineer_profiles', [EngineerProfileController::class, 'show']);
+    Route::post('/engineer_profiles', [EngineerProfileController::class, 'store']); // أو update حسب رغبتك
 
     // المرفقات
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('api.attachments.store');
