@@ -23,15 +23,27 @@ class NotificationController extends Controller
     /**
      * إرسال وحفظ إشعار جديد
      */
-    public function send(Request $request)
+   public function send(Request $request)
     {
         $validated = $request->validate([
             'audience' => 'required|string',
             'title'    => 'required|string|max:255',
             'body'     => 'required|string',
             'priority' => 'nullable|string',
-            'user_id'  => 'nullable|exists:users,id',
+            'user_id'  => 'required_if:audience,specific|nullable',       
         ]);
+
+        // إذا كان الاستهداف لمستخدم محدد وتم إرسال إيميل بدلاً من الـ ID، نقوم بتحويله للـ ID
+        if ($request->audience === 'specific' && !is_numeric($request->user_id)) {
+            $user = \App\Models\User::where('email', $request->user_id)->first();
+            if (!$user) {
+                return response()->json([
+                    'message' => 'المستخدم غير موجود.',
+                    'errors' => ['user_id' => ['البريد الإلكتروني المدخل غير مسجل في النظام.']]
+                ], 422);
+            }
+                $validated['user_id'] = $user->id;
+        }
 
         $notification = Notification::create($validated);
 

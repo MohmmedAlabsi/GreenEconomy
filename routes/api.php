@@ -65,23 +65,24 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
 
+    // مسارات الإشعارات العامة لجميع المستخدمين المسجلين (مزارع، مهندس، مدير)
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications', [NotificationController::class, 'send']); // <--- أضف هذا المسار للإرسال
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::match(['post', 'patch'], '/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    
+
     // مسارات التقارير التشخيصية للزيارات الميدانية (محمية بالكامل)
     Route::get('/field_visit_reports', [FieldVisitReportController::class, 'index']);
     Route::post('/field_visits/{id}/report', [FieldVisitReportController::class, 'store']);
 
     Route::put('/users/{id}', [UserController::class, 'update']);
+    
     // مسارات الأدمن الإدارية
     Route::middleware(['role:Admin'])->group(function () {
         Route::apiResource('users', UserController::class);
         Route::apiResource('roles', RoleController::class);
         Route::put('/platform_settings', [PlatformSettingController::class, 'update'])->name('api.platform-settings.update');
-        
-        // <--- إضافة مسارات الإشعارات الإدارية (تُعالج خطأ 404)
-        Route::prefix('admin/notifications')->group(function () {
-            Route::get('/', [NotificationController::class, 'index']);
-            Route::post('/send', [NotificationController::class, 'send']);
-            Route::patch('/{id}/read', [NotificationController::class, 'markAsRead']);
-        });
     });
 
     Route::middleware(['permission:manage consultations|answer consultations'])->group(function () {
@@ -115,7 +116,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::get('/engineer_profiles', [EngineerProfileController::class, 'show']);
-    Route::post('/engineer_profiles', [EngineerProfileController::class, 'store']); // أو update حسب رغبتك
+    Route::post('/engineer_profiles', [EngineerProfileController::class, 'store']);
 
     // المرفقات
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('api.attachments.store');
