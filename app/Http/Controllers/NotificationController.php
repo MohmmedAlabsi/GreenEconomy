@@ -8,11 +8,12 @@ use App\Models\Notification;
 class NotificationController extends Controller
 {
     /**
-     * جلب قائمة الإشعارات
+     * جلب كل الإشعارات مع بيانات المستخدم (role_id)
      */
     public function index(Request $request)
     {
-        $notifications = Notification::latest()->paginate(15);
+        // تم إضافة 'name' هنا ليقوم الباك إند بإرسال اسم المستخدم مباشرة ضمن كائن user
+        $notifications = Notification::with(['user:id,name,role_id'])->latest()->get();
 
         return response()->json([
             'status' => 'success',
@@ -23,7 +24,7 @@ class NotificationController extends Controller
     /**
      * إرسال وحفظ إشعار جديد
      */
-   public function send(Request $request)
+    public function send(Request $request)
     {
         $validated = $request->validate([
             'audience' => 'required|string',
@@ -33,7 +34,7 @@ class NotificationController extends Controller
             'user_id'  => 'required_if:audience,specific|nullable',       
         ]);
 
-        // إذا كان الاستهداف لمستخدم محدد وتم إرسال إيميل بدلاً من الـ ID، نقوم بتحويله للـ ID
+        // إذا تم إرسال البريد الإلكتروني بدلاً من الـ ID للمستخدم المخصص، نقوم بتحويله للـ ID الصحيح
         if ($request->audience === 'specific' && !is_numeric($request->user_id)) {
             $user = \App\Models\User::where('email', $request->user_id)->first();
             if (!$user) {
@@ -42,7 +43,7 @@ class NotificationController extends Controller
                     'errors' => ['user_id' => ['البريد الإلكتروني المدخل غير مسجل في النظام.']]
                 ], 422);
             }
-                $validated['user_id'] = $user->id;
+            $validated['user_id'] = $user->id;
         }
 
         $notification = Notification::create($validated);
