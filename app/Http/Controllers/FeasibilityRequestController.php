@@ -13,7 +13,7 @@ class FeasibilityRequestController extends Controller
      */
     public function index()
     {
-        $requests = FeasibilityRequest::with(['user', 'category', 'region'])->latest()->paginate(10);
+$requests = FeasibilityRequest::with(['user', 'category', 'region'])->latest()->paginate(50);
         return response()->json($requests);
     }
 

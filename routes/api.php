@@ -21,6 +21,9 @@ use App\Http\Controllers\FieldVisitController;
 use App\Http\Controllers\PlatformSettingController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\NotificationController; 
+use App\Http\Controllers\EngineerProfileController;
+use App\Http\Controllers\FieldVisitReportController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -28,7 +31,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes (المسارات العامة - لا تتطلب تسجيل دخول)
+| Public Routes (المسارات العامة)
 |--------------------------------------------------------------------------
 */
 
@@ -54,7 +57,7 @@ Route::get('/platform_settings', [PlatformSettingController::class, 'index'])->n
 
 /*
 |--------------------------------------------------------------------------
-| Protected Routes (المسارات المحمية - تتطلب توكين Sanctum)
+| Protected Routes (المسارات المحمية بتوكين Sanctum)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -62,6 +65,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
 
+    // مسارات الإشعارات العامة لجميع المستخدمين المسجلين (مزارع، مهندس، مدير)
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications', [NotificationController::class, 'send']); // <--- أضف هذا المسار للإرسال
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::match(['post', 'patch'], '/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    
+
+    // مسارات التقارير التشخيصية للزيارات الميدانية (محمية بالكامل)
+    Route::get('/field_visit_reports', [FieldVisitReportController::class, 'index']);
+    Route::post('/field_visits/{id}/report', [FieldVisitReportController::class, 'store']);
+
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    
+    // مسارات الأدمن الإدارية
     Route::middleware(['role:Admin'])->group(function () {
         Route::apiResource('users', UserController::class);
         Route::apiResource('roles', RoleController::class);
@@ -72,7 +89,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('consultations', ConsultationController::class);
     });
 
-    Route::middleware(['permission:manage feasibility studies'])->group(function () {
+    Route::middleware(['permission:manage feasibility studies|show feasibility studies'])->group(function () {
         Route::apiResource('feasibility_studies', FeasibilityStudyController::class);
     });
 
@@ -82,7 +99,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::apiResource('plant_diseases', PlantDiseaseController::class);
     Route::apiResource('disease_treatments', DiseaseTreatmentController::class);
+
+    // إدارة الزيارات الميدانية ومراحل الرحلة
     Route::apiResource('field_visits', FieldVisitController::class);
+    Route::prefix('field_visits')->group(function () {
+        Route::patch('{id}/assign', [FieldVisitController::class, 'assignEngineer']);
+        Route::patch('{id}/estimate', [FieldVisitController::class, 'submitEstimate']);
+        Route::post('{id}/report', [FieldVisitController::class, 'submitReport']);
+        Route::post('{id}/rating', [FieldVisitController::class, 'submitRating']);
+    });
 
     Route::middleware(['role:Admin|Agricultural Expert'])->group(function () {
         Route::post('/knowledge_base_item', [KnowledgeBaseController::class, 'store'])->name('api.knowledge-base.store');
@@ -90,6 +115,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'destroy'])->name('api.knowledge-base.destroy');
     });
 
+    Route::get('/engineer_profiles', [EngineerProfileController::class, 'show']);
+    Route::post('/engineer_profiles', [EngineerProfileController::class, 'store']);
+
+    // المرفقات
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('api.attachments.store');
     Route::get('/attachments/{id}', [AttachmentController::class, 'show'])->name('api.attachments.show');
     Route::delete('/attachments/{id}', [AttachmentController::class, 'destroy'])->name('api.attachments.destroy');

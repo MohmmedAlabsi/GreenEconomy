@@ -13,7 +13,7 @@ class PlantDiseaseController extends Controller
      */
     public function index()
     {
-        $diseases = PlantDisease::latest()->get();
+        $diseases = PlantDisease::with('plants')->latest()->get();
 
         return response()->json($diseases);
     }
@@ -40,6 +40,8 @@ class PlantDiseaseController extends Controller
             'name'              => 'required|string|max:255',
             'scientific_name'   => 'nullable|string|max:255',
             'plant_type'        => 'nullable|string|max:255',
+            'plant_ids'         => 'nullable|array',               // مصفوفة معرفات النباتات المرتبطة
+            'plant_ids.*'       => 'integer|exists:plants,id',
             'type'              => 'required|string|max:100',
             'severity_level'    => 'nullable|string|max:50',
             'spread_rate'       => 'nullable|string|max:50',
@@ -55,7 +57,6 @@ class PlantDiseaseController extends Controller
         $validated = $request->validate($rules);
 
         if ($request->hasFile('image')) {
-            // تخزين المسار النسبى الخام داخل القرص العام
             $path = $request->file('image')->store('plant_diseases', 'public');
             $validated['image_url'] = $path;
         }
@@ -64,9 +65,14 @@ class PlantDiseaseController extends Controller
 
         $disease = PlantDisease::create($validated);
 
+        // ربط النباتات عبر الجدول الوسيط في حال تم إرسال plant_ids
+        if ($request->has('plant_ids')) {
+            $disease->plants()->sync($request->input('plant_ids', []));
+        }
+
         return response()->json([
             'message' => 'Disease created successfully',
-            'data'    => $disease
+            'data'    => $disease->load('plants')
         ], 201);
     }
 
@@ -81,6 +87,8 @@ class PlantDiseaseController extends Controller
             'name'              => 'sometimes|string|max:255',
             'scientific_name'   => 'nullable|string|max:255',
             'plant_type'        => 'nullable|string|max:255',
+            'plant_ids'         => 'nullable|array',               // مصفوفة معرفات النباتات
+            'plant_ids.*'       => 'integer|exists:plants,id',
             'type'              => 'sometimes|string|max:100',
             'severity_level'    => 'nullable|string|max:50',
             'spread_rate'       => 'nullable|string|max:50',
@@ -96,7 +104,6 @@ class PlantDiseaseController extends Controller
         $validated = $request->validate($rules);
 
         if ($request->hasFile('image')) {
-            // جلب القيمة الخام للمسار من قاعدة البيانات مباشرة بدلاً من الرابط الكامل
             $rawImagePath = $disease->getRawOriginal('image_url');
 
             if ($rawImagePath) {
@@ -111,9 +118,14 @@ class PlantDiseaseController extends Controller
 
         $disease->update($validated);
 
+        // تحديث مزامنة النباتات المرتبطة بالجدول الوسيط
+        if ($request->has('plant_ids')) {
+            $disease->plants()->sync($request->input('plant_ids', []));
+        }
+
         return response()->json([
             'message' => 'Disease updated successfully',
-            'data'    => $disease
+            'data'    => $disease->load('plants')
         ]);
     }
 
@@ -124,16 +136,21 @@ class PlantDiseaseController extends Controller
     {
         $disease = PlantDisease::findOrFail($id);
 
-        $rawImagePath = $disease->getRawOriginal('image_url');
+    // 1. فك ارتباط المرض بالنباتات من الجدول الوسيط
+    if (method_exists($disease, 'plants')) {
+        $disease->plants()->detach();
+    }
 
-        if ($rawImagePath) {
-            Storage::disk('public')->delete($rawImagePath);
-        }
+    // 2. حذف العلاجات المرتبطة بهذا المرض
+    if (method_exists($disease, 'treatments')) {
+        $disease->treatments()->delete();
+    }
 
-        $disease->delete();
+    // 3. حذف المرض نفسه
+    $disease->delete();
 
-        return response()->json([
-            'message' => 'Disease deleted successfully'
-        ]);
+    return response()->json([
+        'message' => 'تم حذف المرض وجميع البيانات المرتبطة به بنجاح'
+    ], 200);
     }
 }

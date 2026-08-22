@@ -70,8 +70,6 @@ class PlantController extends Controller
 
             'planting_season'=>'nullable|string|max:100',
 
-            'category_id'=>'required|exists:categories,id',
-
             'image_url'=>'nullable|string|max:255',
 
         ]);
@@ -135,8 +133,6 @@ class PlantController extends Controller
             'irrigation_schedule'=>'nullable|string',
 
             'planting_season'=>'nullable|string|max:100',
-
-            'category_id'=>'sometimes|exists:categories,id',
 
             'image_url'=>'nullable|string|max:255',
 

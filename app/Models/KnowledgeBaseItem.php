@@ -17,8 +17,6 @@ class KnowledgeBaseItem extends Model
         'category_id',
         'media_url',
         'file_size_bytes',
-        'view_count',
-        'user_id',
     ];
 
     public function category()

@@ -22,7 +22,6 @@ return new class extends Migration
             $table->text('irrigation_schedule')->nullable();
             $table->string('planting_season', 100)->nullable();
             $table->unsignedBigInteger('category_id');
-            $table->foreign('category_id')->references('id')->on('categories');
             $table->string('image_url', 255)->nullable();
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();

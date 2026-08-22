@@ -24,9 +24,7 @@ return new class extends Migration
             $table->foreign('category_id')->references('id')->on('categories');
             $table->string('media_url', 255)->nullable();
             $table->bigInteger('file_size_bytes')->nullable();
-            $table->integer('view_count');
             $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('users');
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
         });

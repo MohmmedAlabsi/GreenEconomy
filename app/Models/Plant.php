@@ -15,7 +15,6 @@ class Plant extends Model
         'climate_requirements',
         'irrigation_schedule',
         'planting_season',
-        'category_id',
         'image_url',
     ];
 

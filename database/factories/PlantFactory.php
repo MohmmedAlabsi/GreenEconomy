@@ -50,8 +50,6 @@ class PlantFactory extends Factory
                 'Winter',
             ]),
 
-            'category_id' => Category::inRandomOrder()->first()->id,
-
             'image_url' => fake()->imageUrl(640, 480, 'nature'),
 
             'created_at' => now(),

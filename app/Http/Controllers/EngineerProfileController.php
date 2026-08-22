@@ -21,8 +21,21 @@ class EngineerProfileController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+public function show(Request $request, $id = null)
     {
+        // إذا لم يتم تمرير id في الرابط، جلب الملف الخاص بالمستخدم المسجل حالياً
+        if (!$id) {
+            $profile = EngineerProfile::with(['user', 'specialization'])
+                ->where('user_id', $request->user()->id)
+                ->first();
+                
+            if (!$profile) {
+                return response()->json(['data' => null], 200);
+            }
+            
+            return response()->json($profile);
+        }
+
         $profile = EngineerProfile::with(['user', 'specialization'])->findOrFail($id);
         return response()->json($profile);
     }
@@ -32,20 +45,38 @@ class EngineerProfileController extends Controller
      */
     public function store(Request $request)
     {
+        $userId = $request->user()->id;
+
         $validated = $request->validate([
-            'user_id'               => 'required|exists:users,id|unique:engineer_profiles,user_id',
             'specialization_id'     => 'nullable|exists:specializations,id',
             'years_of_experience'   => 'nullable|integer|min:0',
+            'qualification'         => 'nullable|string|max:255',
             'bio'                   => 'nullable|string',
-            'cv_file'               => 'nullable|string|max:255',
+            // تعديل قاعدة التحقق لتسمح بملف PDF أو نص (في حال لم يتم رفع ملف جديد وبقي القديم)
+            'cv_file'               => 'nullable|sometimes|file|mimes:pdf|max:5120', 
         ]);
 
-        $profile = EngineerProfile::create($validated);
+        $profileData = [
+            'specialization_id'     => $request->specialization_id,
+            'years_of_experience'   => $request->years_of_experience,
+            'qualification'         => $request->qualification,
+            'bio'                   => $request->bio,
+        ];
+
+        // معالجة رفع الملف الجديد
+        if ($request->hasFile('cv_file')) {
+            $profileData['cv_file'] = $request->file('cv_file')->store('cv_files', 'public');
+        }
+
+        $profile = EngineerProfile::updateOrCreate(
+            ['user_id' => $userId],
+            $profileData
+        );
 
         return response()->json([
-            'message' => 'Engineer profile created successfully',
+            'message' => 'Profile saved successfully',
             'data'    => $profile->load(['user', 'specialization'])
-        ], 201);
+        ], 200);
     }
 
     /**
