@@ -63,7 +63,9 @@ public function store(Request $request)
     ]);
 
     $requestData = FeasibilityRequest::create($validated);
-    $admin = \App\Models\User::role('Admin')->first();
+    $admin = \App\Models\User::whereHas('role', function($q) {
+        $q->where('name', 'Admin');
+    })->first();
 
         if ($admin) {
         \App\Models\Notification::create([
