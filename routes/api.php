@@ -55,6 +55,8 @@ Route::get('/knowledge_base_item', [KnowledgeBaseController::class, 'index'])->n
 Route::get('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'show'])->name('api.knowledge-base.show');
 
 Route::get('/platform_settings', [PlatformSettingController::class, 'index'])->name('api.platform-settings.index');
+// أضف هذا المسار في قسم Public Routes
+Route::get('/engineer_profiles', [EngineerProfileController::class, 'index'])->name('api.engineer-profiles.index');
 
 /*
 |--------------------------------------------------------------------------
@@ -122,7 +124,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'destroy'])->name('api.knowledge-base.destroy');
     });
 
-    Route::get('/engineer_profiles', [EngineerProfileController::class, 'show']);
+    //Route::get('/engineer_profiles', [EngineerProfileController::class, 'show']);
     Route::post('/engineer_profiles', [EngineerProfileController::class, 'store']);
 
     // المرفقات
