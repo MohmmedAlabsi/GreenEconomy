@@ -24,6 +24,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\NotificationController; 
 use App\Http\Controllers\EngineerProfileController;
 use App\Http\Controllers\FieldVisitReportController;
+use App\Http\Controllers\AdminEngineerController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -71,6 +72,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::match(['post', 'patch'], '/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     
+    // مسارات إدارة طلبات المهندسين (للأدمن)
+    Route::middleware(['auth:sanctum', 'role:Admin'])->group(function () {
+        Route::get('/admin/engineer_join_requests', [AdminEngineerController::class, 'indexRequests']);
+        Route::post('/admin/engineer_join_requests/{id}/approve', [AdminEngineerController::class, 'approveRequest']);
+        Route::post('/admin/engineer_join_requests/{id}/reject', [AdminEngineerController::class, 'rejectRequest']);
+    });
 
     // مسارات التقارير التشخيصية للزيارات الميدانية (محمية بالكامل)
     Route::get('/field_visit_reports', [FieldVisitReportController::class, 'index']);

@@ -55,6 +55,27 @@ public function store(Request $request)
     $validated['status'] = 'pending';
 
     $requestData = FeasibilityRequest::create($validated);
+    $admin = \App\Models\User::whereHas('role', function($q) {
+        $q->where('name', 'Admin');
+    })->first();
+
+        if ($admin) {
+        \App\Models\Notification::create([
+            'audience' => 'specific',
+            'user_id'  => $admin->id,
+            'title'    => 'طلب دراسة جدوى جديد',
+            'body'     => 'تم تقديم طلب دراسة جدوى للمشروع: "' . $requestData->project_title . '" من قبل المستخدم ID: ' . $requestData->user_id,
+            'priority' => 'normal',
+        ]);
+    }
+
+    \App\Models\Notification::create([
+        'audience' => 'specific',
+        'user_id'  => $requestData->user_id,
+        'title'    => 'تم استلام طلب دراسة الجدوى',
+        'body'     => 'تم حفظ طلب دراسة الجدوى الخاص بمشروع "' . $requestData->project_title . '" وسيتم معالجته قريباً.',
+        'priority' => 'normal',
+    ]);
 
     return response()->json([
         'message' => 'Feasibility request created successfully',

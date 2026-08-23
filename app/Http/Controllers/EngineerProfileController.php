@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\EngineerProfile;
 use Illuminate\Routing\Controller;
@@ -21,7 +21,7 @@ class EngineerProfileController extends Controller
     /**
      * Display the specified resource.
      */
-public function show(Request $request, $id = null)
+    public function show(Request $request, $id = null)
     {
         // إذا لم يتم تمرير id في الرابط، جلب الملف الخاص بالمستخدم المسجل حالياً
         if (!$id) {
@@ -46,6 +46,7 @@ public function show(Request $request, $id = null)
     public function store(Request $request)
     {
         $userId = $request->user()->id;
+        $user = User::find($userId); // أو المصادقة Auth::user()
 
         $validated = $request->validate([
             'specialization_id'     => 'nullable|exists:specializations,id',
@@ -67,6 +68,14 @@ public function show(Request $request, $id = null)
         if ($request->hasFile('cv_file')) {
             $profileData['cv_file'] = $request->file('cv_file')->store('cv_files', 'public');
         }
+        
+        if ($request->hasFile('avatar')) {
+        $avatarPath = $request->file('avatar')->store('avatars', 'public');
+    
+        // حفظ المسار في قاعدة البيانات (مثلاً في جدول users أو engineer_profiles)
+         $user->avatar = asset('storage/' . $avatarPath);
+         $user->save();
+       }
 
         $profile = EngineerProfile::updateOrCreate(
             ['user_id' => $userId],
