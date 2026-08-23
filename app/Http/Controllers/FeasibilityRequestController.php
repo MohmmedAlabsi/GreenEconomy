@@ -43,24 +43,16 @@ $requests = FeasibilityRequest::with(['user', 'category', 'region'])->latest()->
 public function store(Request $request)
 {
     $validated = $request->validate([
-
-        'user_id' => 'required|exists:users,id',
-
         'project_title' => 'required|string|max:255',
-
         'category_id' => 'nullable|exists:categories,id',
-
         'region_id' => 'nullable|exists:regions,id',
-
         'estimated_budget' => 'nullable|numeric',
-
         'land_area' => 'nullable|numeric',
-
         'description' => 'nullable|string',
-
-        'status' => 'nullable|string|max:50',
-
     ]);
+
+    $validated['user_id'] = $request->user()->id;
+    $validated['status'] = 'pending';
 
     $requestData = FeasibilityRequest::create($validated);
     $admin = \App\Models\User::role('Admin')->first();
@@ -84,11 +76,8 @@ public function store(Request $request)
     ]);
 
     return response()->json([
-
         'message' => 'Feasibility request created successfully',
-
         'data' => $requestData
-
     ], 201);
 }
 
