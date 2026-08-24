@@ -19,8 +19,12 @@ WORKDIR /var/www/html
 # نسخ ملفات المشروع
 COPY . .
 
+# تثبيت حزم PHP عبر Composer
+RUN composer install --no-dev --optimize-autoloader
+
 # إعطاء صلاحيات التخزين وแคش
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # توجيه الـ Apache إلى مجلد public الخاص بـ لاراول
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
@@ -30,7 +34,13 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.
 # تفعيل mod_rewrite الخاص بلاراول
 RUN a2enmod rewrite
 
-# تثبيت حزم PHP عبر Composer
-RUN composer install --no-dev --optimize-autoloader
+# إنشاء سكربت بدء التشغيل لتطبيق إعدادات لاراول ثم تشغيل Apache
+RUN echo '#!/bin/bash' > /usr/local/bin/entrypoint.sh \
+    && echo 'php artisan config:cache' >> /usr/local/bin/entrypoint.sh \
+    && echo 'php artisan route:cache' >> /usr/local/bin/entrypoint.sh \
+    && echo 'apache2-foreground' >> /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 80
+
+CMD ["/usr/local/bin/entrypoint.sh"]
