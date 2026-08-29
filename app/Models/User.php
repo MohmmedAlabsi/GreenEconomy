@@ -41,6 +41,19 @@ class User extends Authenticatable
         'identity_verified' => 'boolean',
     ];
 
+    /**
+     * Scope a query to users whose role is "Admin".
+     *
+     * Extracted from the repeated `whereHas('role', ...)` lookups that used to
+     * live in the field-visit / feasibility controllers.
+     */
+    public function scopeAdmins($query)
+    {
+        return $query->whereHas('role', function ($q) {
+            $q->where('name', 'Admin');
+        });
+    }
+
     // العلاقة مع ملف المهندس (إضافة حديثة)
     public function engineerProfile()
     {
