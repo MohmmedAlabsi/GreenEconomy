@@ -7,6 +7,12 @@ use App\Models\FieldVisit;
 use App\Models\FieldVisitReport;
 use Illuminate\Routing\Controller;
 use App\Models\Notification;
+use App\Http\Requests\StoreFieldVisitRequest;
+use App\Http\Requests\UpdateFieldVisitRequest;
+use App\Http\Requests\AssignEngineerFieldVisitRequest;
+use App\Http\Requests\SubmitEstimateFieldVisitRequest;
+use App\Http\Requests\SubmitReportFieldVisitRequest;
+use App\Http\Requests\SubmitRatingFieldVisitRequest;
 
 class FieldVisitController extends Controller
 {
@@ -39,26 +45,9 @@ class FieldVisitController extends Controller
     /**
      * إنشاء طلب زيارة ميدانية جديد (المزارع)
      */
-    public function store(Request $request)
+    public function store(StoreFieldVisitRequest $request)
     {
-        $validated = $request->validate([
-            'user_id'             => 'required|exists:users,id',
-            'contact_name'        => 'required|string|max:255',
-            'contact_phone'       => 'required|string|max:20',
-            'governorate'         => 'required|string|max:100',
-            'district'            => 'required|string|max:100',
-            'village_or_area'     => 'required|string|max:255',
-            'nearest_landmark'    => 'nullable|string|max:255',
-            'crop_type'           => 'required|string|max:100',
-            'area_size'           => 'required|numeric',
-            'infestation_type'    => 'required|string|max:150',
-            'priority_level'      => 'required|string|max:50',
-            'problem_description' => 'required|string',
-            'status'              => 'nullable|string|max:50',
-            'scheduled_at'        => 'nullable|date',
-            'estimated_cost'      => 'nullable|numeric',
-        ]);
-
+        $validated = $request->validated();
         $validated['current_step'] = 1;
         $validated['status'] = $validated['status'] ?? 'submitted';
 
@@ -70,7 +59,7 @@ class FieldVisitController extends Controller
 
         // إشعار للأدمن بطلب جديد
         if ($admin) {
-            \App\Models\Notification::create([
+            Notification::create([
                 'audience' => 'specific',
                 'user_id'  => $admin->id,
                 'title'    => 'طلب نزول ميداني جديد',
@@ -81,7 +70,7 @@ class FieldVisitController extends Controller
 
         // إشعار للمزارع بتأكيد الاستلام
         if ($visit->user_id) {
-            \App\Models\Notification::create([
+            Notification::create([
                 'audience' => 'specific',
                 'user_id'  => $visit->user_id,
                 'title'    => 'تم استلام طلبك بنجاح',
@@ -96,33 +85,11 @@ class FieldVisitController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateFieldVisitRequest $request, string $id)
     {
         $visit = FieldVisit::findOrFail($id);
-
-        $validated = $request->validate([
-            'user_id'             => 'sometimes|exists:users,id',
-            'engineer_id'         => 'nullable|exists:users,id',
-            'contact_name'        => 'sometimes|string|max:255',
-            'contact_phone'       => 'sometimes|string|max:20',
-            'governorate'         => 'sometimes|string|max:100',
-            'district'            => 'sometimes|string|max:100',
-            'village_or_area'     => 'sometimes|string|max:255',
-            'nearest_landmark'    => 'nullable|string|max:255',
-            'crop_type'           => 'sometimes|string|max:100',
-            'area_size'           => 'sometimes|numeric',
-            'infestation_type'    => 'sometimes|string|max:150',
-            'priority_level'      => 'sometimes|string|max:50',
-            'problem_description' => 'sometimes|string',
-            'status'              => 'nullable|string|max:50',
-            'current_step'        => 'nullable|integer|min:1|max:9',
-            'scheduled_at'        => 'nullable|date',
-            'estimated_cost'      => 'nullable|numeric',
-            'rating'              => 'nullable|integer|min:1|max:5',
-            'rating_comment'      => 'nullable|string',
-        ]);
-
-        $visit->update($validated);
+        
+        $visit->update($request->validated());
 
         return response()->json([
             'message' => 'Field visit updated successfully',
@@ -143,12 +110,9 @@ class FieldVisitController extends Controller
     /**
      * تعيين مهندس زراعي للزيارة (المدير) -> المرحلة 3
      */
-    public function assignEngineer(Request $request, $id)
+    public function assignEngineer(AssignEngineerFieldVisitRequest $request, $id)
     {
-        $validated = $request->validate([
-            'engineer_id' => 'required|exists:users,id',
-        ]);
-
+        $validated = $request->validated();
         $visit = FieldVisit::findOrFail($id);
         $engineerId = $validated['engineer_id'];
 
@@ -159,7 +123,7 @@ class FieldVisitController extends Controller
         ]);
 
         // إشعار للمهندس
-        \App\Models\Notification::create([
+        Notification::create([
             'audience' => 'specific',
             'user_id'  => $engineerId,
             'title'    => 'اسناد مهمة نزول ميداني جديدة',
@@ -169,7 +133,7 @@ class FieldVisitController extends Controller
 
         // إشعار للمزارع
         if ($visit->user_id) {
-            \App\Models\Notification::create([
+            Notification::create([
                 'audience' => 'specific',
                 'user_id'  => $visit->user_id,
                 'title'    => 'تعيين مهندس لطلبك',
@@ -187,14 +151,11 @@ class FieldVisitController extends Controller
     /**
      * تقديم التكلفة والموعد المقترح (المهندس) -> المرحلة 4
      */
-    public function submitEstimate(Request $request, $id)
+    public function submitEstimate(SubmitEstimateFieldVisitRequest $request, $id)
     {
-        $validated = $request->validate([
-            'estimated_cost' => 'required|numeric|min:0',
-            'scheduled_at'   => 'required|date',
-        ]);
-
+        $validated = $request->validated();
         $visit = FieldVisit::findOrFail($id);
+        
         $admin = \App\Models\User::whereHas('role', function($q) {
             $q->where('name', 'Admin');
         })->first();
@@ -207,7 +168,7 @@ class FieldVisitController extends Controller
         ]);
 
         if ($admin) {
-            \App\Models\Notification::create([
+            Notification::create([
                 'audience' => 'specific',
                 'user_id'  => $admin->id,
                 'title'    => 'تقديم تسعيرة وموعد نزول',
@@ -217,7 +178,7 @@ class FieldVisitController extends Controller
         }
 
         if ($visit->user_id) {
-            \App\Models\Notification::create([
+            Notification::create([
                 'audience' => 'specific',
                 'user_id'  => $visit->user_id,
                 'title'    => 'تم تحديد تكلفة وموعد الزيارة',
@@ -235,19 +196,14 @@ class FieldVisitController extends Controller
     /**
      * رفع التقرير الميداني وإغلاق الطلب (المهندس) -> المرحلة 8
      */
-    public function submitReport(Request $request, $id)
+    public function submitReport(SubmitReportFieldVisitRequest $request, $id)
     {
         $visit = FieldVisit::findOrFail($id);
+        $validated = $request->validated();
+        
         $admin = \App\Models\User::whereHas('role', function($q) {
             $q->where('name', 'Admin');
         })->first();
-
-        $validated = $request->validate([
-            'diagnosis'         => 'required|string',
-            'recommendations'   => 'required|string',
-            'prescribed_inputs' => 'nullable|string',
-            'notes'             => 'nullable|string',
-        ]);
 
         FieldVisitReport::updateOrCreate(
             ['field_visit_id' => $visit->id],
@@ -266,7 +222,7 @@ class FieldVisitController extends Controller
         ]);
 
         if ($admin) {
-            \App\Models\Notification::create([
+            Notification::create([
                 'audience' => 'specific',
                 'user_id'  => $admin->id,
                 'title'    => 'تم إرفاق وإتمام تقرير النزول',
@@ -284,14 +240,11 @@ class FieldVisitController extends Controller
     /**
      * تقييم الخدمة (المزارع) -> المرحلة 9
      */
-    public function submitRating(Request $request, $id)
+    public function submitRating(SubmitRatingFieldVisitRequest $request, $id)
     {
-        $validated = $request->validate([
-            'rating'         => 'required|integer|min:1|max:5',
-            'rating_comment' => 'nullable|string',
-        ]);
-
+        $validated = $request->validated();
         $visit = FieldVisit::findOrFail($id);
+        
         $visit->update([
             'rating'         => $validated['rating'],
             'rating_comment' => $validated['rating_comment'] ?? null,
@@ -304,7 +257,7 @@ class FieldVisitController extends Controller
         $engineer = \App\Models\User::find($visit->engineer_id);
 
         if ($admin) {
-            \App\Models\Notification::create([
+            Notification::create([
                 'audience' => 'specific',
                 'user_id'  => $admin->id,
                 'title'    => 'تقييم خدمة ومهندس جديد',
@@ -314,7 +267,7 @@ class FieldVisitController extends Controller
         }
 
         if ($engineer) {
-            \App\Models\Notification::create([
+            Notification::create([
                 'audience' => 'specific',
                 'user_id'  => $engineer->id,
                 'title'    => 'تلقيت تقييماً جديداً',

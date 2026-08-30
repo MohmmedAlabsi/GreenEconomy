@@ -2,25 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Category;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $categories = Category::all();
-
         return response()->json($categories);
     }
 
-
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $category = Category::with([
@@ -31,21 +24,9 @@ class CategoryController extends Controller
         return response()->json($category);
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:categories',
-            'type' => 'required|string|max:50',
-        ]);
-
-
-        $category = Category::create($validated);
-
+        $category = Category::create($request->validated());
 
         return response()->json([
             'message' => 'Category created successfully',
@@ -53,35 +34,17 @@ class CategoryController extends Controller
         ], 201);
     }
 
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         $category = Category::findOrFail($id);
-
         return response()->json($category);
     }
 
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
+    public function update(UpdateCategoryRequest $request, $id)
     {
         $category = Category::findOrFail($id);
-
-
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'slug' => 'sometimes|string|max:255|unique:categories,slug,' . $id,
-            'type' => 'sometimes|string|max:50',
-        ]);
-
-
-        $category->update($validated);
-
+        
+        $category->update($request->validated());
 
         return response()->json([
             'message' => 'Category updated successfully',
@@ -89,16 +52,10 @@ class CategoryController extends Controller
         ]);
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         $category = Category::findOrFail($id);
-
         $category->delete();
-
 
         return response()->json([
             'message' => 'Category deleted successfully'

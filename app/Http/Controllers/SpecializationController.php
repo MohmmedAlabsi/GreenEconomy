@@ -2,114 +2,71 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Specialization;
+use App\Http\Requests\StoreSpecializationRequest;
+use App\Http\Requests\UpdateSpecializationRequest;
 
 class SpecializationController extends Controller
 {
-
-    /**
-     * Display all specializations.
-     */
     public function index()
     {
-        $specializations = Specialization::with('role')->get();
-
+        $specializations = Specialization::with('role')->get(); //[cite: 30]
         return response()->json($specializations);
     }
 
-
-    /**
-     * Display a specific specialization.
-     */
     public function show($id)
     {
         $specialization = Specialization::with([
             'role',
             'users'
-        ])->findOrFail($id);
+        ])->findOrFail($id); //[cite: 30]
 
         return response()->json($specialization);
     }
+
     public function create()
     {
         return response()->json([
             'message' => 'Create specialization'
-        ]);
+        ]); //[cite: 30]
     }
 
-    /**
-     * Store a new specialization.
-     */
-    public function store(Request $request)
+    public function store(StoreSpecializationRequest $request)
     {
-
-        $validated = $request->validate([
-            'role_id' => 'required|exists:roles,id',
-            'name' => 'required|string|max:150',
-        ]);
-
-
-        $specialization = Specialization::create($validated);
-
+        $specialization = Specialization::create($request->validated()); //[cite: 30]
 
         return response()->json([
             'message' => 'Specialization created successfully',
             'data' => $specialization
-        ],201);
+        ], 201); //[cite: 30]
     }
-
 
     public function edit($id)
     {
         return response()->json([
             'message' => 'Edit specialization',
             'id' => $id
-        ]);
+        ]); //[cite: 30]
     }
-    /**
-     * Update specialization.
-     */
-    public function update(Request $request, $id)
+
+    public function update(UpdateSpecializationRequest $request, $id)
     {
-
-        $specialization = Specialization::findOrFail($id);
-
-
-        $validated = $request->validate([
-            'role_id' => 'required|exists:roles,id',
-            'name' => 'required|string|max:150',
-        ]);
-
-
-        $specialization->update($validated);
-
+        $specialization = Specialization::findOrFail($id); //[cite: 30]
+        $specialization->update($request->validated()); //[cite: 30]
 
         return response()->json([
             'message'=>'Specialization updated successfully',
             'data'=>$specialization
-        ]);
-
+        ]); //[cite: 30]
     }
 
-
-
-    /**
-     * Delete specialization.
-     */
     public function destroy($id)
     {
-
-        $specialization = Specialization::findOrFail($id);
-
-
+        $specialization = Specialization::findOrFail($id); //[cite: 30]
         $specialization->delete();
-
 
         return response()->json([
             'message'=>'Specialization deleted successfully'
-        ]);
-
+        ]); //[cite: 30]
     }
-
 }

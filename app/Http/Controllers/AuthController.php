@@ -9,39 +9,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
+use App\Http\Requests\RegisterUserRequest;
+use App\Http\Requests\LoginUserRequest;
 
 class AuthController extends Controller
 {
     /**
      * تسجيل حساب جديد في جدول users أو حفظ طلب انضمام المهندس في جدول الطلبات المؤقتة
      */
-public function register(Request $request)
+    public function register(RegisterUserRequest $request) // استخدام الـ Request الخاص[cite: 4]
     {
         // 1. تحديد رقم دور المهندس ديناميكياً أو برقم ثابت (مثلاً 3)
         $engineerRoleId = 3; // استبدله بالرقم الفعلي لدور المهندس في جدول roles لديك
-
-        $validator = Validator::make($request->all(), [
-            'name'                => 'required|string|max:255',
-            'email'               => 'required|string|email|max:255|unique:users',
-            'password'            => 'required|string|min:8|confirmed',
-            'phone'               => 'nullable|string|max:20',
-            'role_id'             => 'required|exists:roles,id',
-            'region_id'           => 'required|exists:regions,id',
-            'district'            => 'required|string|max:255',
-            
-            // الحقول الإلزامية للمهندس فقط (عندما يكون الدور 3)
-            'specialization_id'   => 'required_if:role_id,3|nullable|exists:specializations,id',
-            'qualification'       => 'required_if:role_id,3|nullable|string|max:255',
-            'years_of_experience' => 'required_if:role_id,3|nullable|integer|min:0',
-            'cv_file'             => 'nullable|file|mimes:pdf|max:5120',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
 
         // إذا كان المسجل مهندساً (حسب الـ role_id)
         if ($request->role_id == $engineerRoleId) {
@@ -112,16 +91,8 @@ public function register(Request $request)
     /**
      * تسجيل الدخول[cite: 8]
      */
-    public function login(Request $request)
+    public function login(LoginUserRequest $request) // استخدام الـ Request الخاص[cite: 4]
     {
-        $validator = Validator::make($request->all(), [
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
-        }
 
         $user = User::where('email', $request->email)->first();
 

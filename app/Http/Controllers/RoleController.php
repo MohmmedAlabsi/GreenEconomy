@@ -2,80 +2,58 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Routing\Controller;
+use App\Http\Requests\StoreRoleRequest;
+use App\Http\Requests\UpdateRoleRequest;
 
 class RoleController extends Controller
 {
-    /**
-     * Display a listing of the roles.
-     */
     public function index()
     {
         $roles = Role::all();
-        return response()->json($roles);
+        return response()->json($roles); //[cite: 29]
     }
 
-    /**
-     * Store a newly created role in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreRoleRequest $request)
     {
-        $validated = $request->validate([
-            'name'       => 'required|string|max:255|unique:roles,name',
-            'guard_name' => 'nullable|string|max:255',
-        ]);
-
+        $validated = $request->validated();
+        
         $role = Role::create([
             'name'       => $validated['name'],
-            'guard_name' => $validated['guard_name'] ?? 'api',
+            'guard_name' => $validated['guard_name'] ?? 'api', //[cite: 29]
         ]);
 
         return response()->json([
             'message' => 'Role created successfully',
             'data'    => $role
-        ], 201);
+        ], 201); //[cite: 29]
     }
 
-    /**
-     * Display the specified role.
-     */
     public function show($id)
     {
-        $role = Role::findOrFail($id);
+        $role = Role::findOrFail($id); //[cite: 29]
         return response()->json($role);
     }
 
-    /**
-     * Update the specified role in storage.
-     */
-    public function update(Request $request, $id)
+    public function update(UpdateRoleRequest $request, $id)
     {
-        $role = Role::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $id,
-        ]);
-
-        $role->update($validated);
+        $role = Role::findOrFail($id); //[cite: 29]
+        $role->update($request->validated()); //[cite: 29]
 
         return response()->json([
             'message' => 'Role updated successfully',
             'data'    => $role
-        ]);
+        ]); //[cite: 29]
     }
 
-    /**
-     * Remove the specified role from storage.
-     */
     public function destroy($id)
     {
-        $role = Role::findOrFail($id);
+        $role = Role::findOrFail($id); //[cite: 29]
         $role->delete();
 
         return response()->json([
             'message' => 'Role deleted successfully'
-        ]);
+        ]); //[cite: 29]
     }
 }

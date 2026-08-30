@@ -2,31 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Region;
+use App\Http\Requests\StoreRegionRequest;
+use App\Http\Requests\UpdateRegionRequest;
 
 class RegionController extends Controller
 {
-    /**
-     * Display a listing of the regions.
-     */
     public function index()
     {
         $regions = Region::all();
-
-        return response()->json($regions);
+        return response()->json($regions); //[cite: 28]
     }
 
-
-    /**
-     * Display a specific region with related data.
-     */
     public function show($id)
     {
         $region = Region::with([
             'feasibilityStudies',
             'feasibilityRequests'
-        ])->findOrFail($id);
+        ])->findOrFail($id); //[cite: 28]
 
         return response()->json($region);
     }
@@ -35,69 +28,45 @@ class RegionController extends Controller
     {
         return response()->json([
             'message' => 'Create region'
-        ]);
+        ]); //[cite: 28]
     }
-    /**
-     * Store a newly created region.
-     */
-    public function store(Request $request)
+
+    public function store(StoreRegionRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:150',
-        ]);
-
-
-        $region = Region::create($validated);
-
+        $region = Region::create($request->validated()); //[cite: 28]
 
         return response()->json([
             'message' => 'Region created successfully',
             'data' => $region
-        ], 201);
+        ], 201); //[cite: 28]
     }
+
     public function edit($id)
     {
         return response()->json([
             'message' => 'Edit region',
             'id' => $id
-        ]);
+        ]); //[cite: 28]
     }
 
-    /**
-     * Update an existing region.
-     */
-    public function update(Request $request, $id)
+    public function update(UpdateRegionRequest $request, $id)
     {
-        $region = Region::findOrFail($id);
-
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:150',
-        ]);
-
-
-        $region->update($validated);
-
+        $region = Region::findOrFail($id); //[cite: 28]
+        $region->update($request->validated()); //[cite: 28]
 
         return response()->json([
             'message' => 'Region updated successfully',
             'data' => $region
-        ]);
+        ]); //[cite: 28]
     }
 
-
-    /**
-     * Delete a region.
-     */
     public function destroy($id)
     {
         $region = Region::findOrFail($id);
-
-        $region->delete();
-
+        $region->delete(); //[cite: 28]
 
         return response()->json([
             'message' => 'Region deleted successfully'
-        ]);
+        ]); //[cite: 28]
     }
 }

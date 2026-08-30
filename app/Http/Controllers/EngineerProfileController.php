@@ -5,77 +5,53 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\EngineerProfile;
-use Illuminate\Routing\Controller;
+use App\Http\Requests\StoreEngineerProfileRequest;
+use App\Http\Requests\UpdateEngineerProfileRequest;
 
 class EngineerProfileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $profiles = EngineerProfile::with(['user', 'specialization'])->paginate(15);
         return response()->json($profiles);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Request $request, $id = null)
     {
-        // إذا لم يتم تمرير id في الرابط، جلب الملف الخاص بالمستخدم المسجل حالياً
         if (!$id) {
             $profile = EngineerProfile::with(['user', 'specialization'])
                 ->where('user_id', $request->user()->id)
                 ->first();
                 
-            if (!$profile) {
-                return response()->json(['data' => null], 200);
-            }
-            
-            return response()->json($profile);
+            return response()->json($profile ? $profile : ['data' => null], 200);
         }
 
         $profile = EngineerProfile::with(['user', 'specialization'])->findOrFail($id);
         return response()->json($profile);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreEngineerProfileRequest $request)
     {
         $userId = $request->user()->id;
-        $user = User::find($userId); // أو المصادقة Auth::user()
-
-        $validated = $request->validate([
-            'specialization_id'     => 'nullable|exists:specializations,id',
-            'years_of_experience'   => 'nullable|integer|min:0',
-            'qualification'         => 'nullable|string|max:255',
-            'bio'                   => 'nullable|string',
-            // تعديل قاعدة التحقق لتسمح بملف PDF أو نص (في حال لم يتم رفع ملف جديد وبقي القديم)
-            'cv_file'               => 'nullable|sometimes|file|mimes:pdf|max:5120', 
-        ]);
+        $user = User::find($userId); 
+        $validated = $request->validated();
 
         $profileData = [
-            'specialization_id'     => $request->specialization_id,
-            'years_of_experience'   => $request->years_of_experience,
-            'qualification'         => $request->qualification,
-            'bio'                   => $request->bio,
+            'specialization_id'     => $validated['specialization_id'] ?? null,
+            'years_of_experience'   => $validated['years_of_experience'] ?? null,
+            'qualification'         => $validated['qualification'] ?? null,
+            'bio'                   => $validated['bio'] ?? null,
         ];
 
-        // معالجة رفع الملف الجديد
         if ($request->hasFile('cv_file')) {
             $profileData['cv_file'] = $request->file('cv_file')->store('cv_files', 'public');
         }
         
         if ($request->hasFile('avatar')) {
-        $avatarPath = $request->file('avatar')->store('avatars', 'public');
-    
-        // حفظ المسار في قاعدة البيانات (مثلاً في جدول users أو engineer_profiles)
-         $user->avatar = asset('storage/' . $avatarPath);
-         $user->save();
-       }
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = asset('storage/' . $avatarPath);
+            $user->save();
+        }
 
         $profile = EngineerProfile::updateOrCreate(
             ['user_id' => $userId],
@@ -88,21 +64,10 @@ class EngineerProfileController extends Controller
         ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateEngineerProfileRequest $request, string $id)
     {
         $profile = EngineerProfile::findOrFail($id);
-
-        $validated = $request->validate([
-            'specialization_id'     => 'nullable|exists:specializations,id',
-            'years_of_experience'   => 'nullable|integer|min:0',
-            'bio'                   => 'nullable|string',
-            'cv_file'               => 'nullable|string|max:255',
-        ]);
-
-        $profile->update($validated);
+        $profile->update($request->validated());
 
         return response()->json([
             'message' => 'Engineer profile updated successfully',
@@ -110,16 +75,11 @@ class EngineerProfileController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $profile = EngineerProfile::findOrFail($id);
         $profile->delete();
 
-        return response()->json([
-            'message' => 'Engineer profile deleted successfully'
-        ]);
+        return response()->json(['message' => 'Engineer profile deleted successfully']);
     }
 }

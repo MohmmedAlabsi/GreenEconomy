@@ -2,25 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\FieldVisitReport;
 use App\Models\FieldVisit;
-use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\StoreFieldVisitReportRequest;
 
 class FieldVisitReportController extends Controller
 {
-    /**
-     * جلب قائمة كافة التقارير التشخيصية المسجلة
-     */
-    public function index(Request $request)
+    public function index()
     {
         try {
             $reports = FieldVisitReport::with(['fieldVisit', 'engineer'])->latest()->get();
-
-            return response()->json([
-                'success' => true,
-                'data' => $reports
-            ], 200);
+            return response()->json(['success' => true, 'data' => $reports], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -30,27 +22,11 @@ class FieldVisitReportController extends Controller
         }
     }
 
-    /**
-     * حفظ وتخزين تقرير زيارة ميدانية جديد مرتبط بالمهمة
-     */
-    public function store(Request $request, $id = null)
+    public function store(StoreFieldVisitReportRequest $request, $id = null)
     {
-        $visitId = $request->field_visit_id ?? $id;
-
-        $request->merge(['field_visit_id' => $visitId]);
-
-        $validatedData = $request->validate([
-            'field_visit_id'    => 'required|exists:field_visits,id',
-            'diagnosis'         => 'required|string',
-            'recommendations'   => 'required|string',
-            'prescribed_inputs' => 'nullable|string',
-            'notes'             => 'nullable|string',
-            'attachment'        => 'nullable|file|max:10240',
-        ]);
-
         try {
-            /** @var FieldVisit|null $visit */
-            $visit = FieldVisit::find($visitId);
+            $validatedData = $request->validated();
+            $visit = FieldVisit::find($validatedData['field_visit_id']);
 
             if (!$visit) {
                 return response()->json([
@@ -59,7 +35,6 @@ class FieldVisitReportController extends Controller
                 ], 404);
             }
 
-            // استخراج معرّف المهندس بطريقة تتجنب تحذيرات المحرر تماماً
             $engineerId = $visit->getAttribute('engineer_id') ?? auth()->id;
 
             $filePath = null;
@@ -70,10 +45,10 @@ class FieldVisitReportController extends Controller
             $report = FieldVisitReport::create([
                 'field_visit_id'    => $visit->getKey(),
                 'engineer_id'       => $engineerId,
-                'diagnosis'         => $request->diagnosis,
-                'recommendations'   => $request->recommendations,
-                'prescribed_inputs' => $request->prescribed_inputs,
-                'notes'             => $request->notes,
+                'diagnosis'         => $validatedData['diagnosis'],
+                'recommendations'   => $validatedData['recommendations'],
+                'prescribed_inputs' => $validatedData['prescribed_inputs'] ?? null,
+                'notes'             => $validatedData['notes'] ?? null,
                 'attachment'        => $filePath,
             ]);
 

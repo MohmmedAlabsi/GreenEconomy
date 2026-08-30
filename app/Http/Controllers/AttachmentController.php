@@ -8,25 +8,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Http\Requests\StoreAttachmentRequest;
 
 class AttachmentController extends Controller
 {
     /**
      * رفع ملف جديد وتخزينه في النظام.
      */
-    public function store(Request $request)
+    public function store(StoreAttachmentRequest $request) // استخدمنا الـ Request المخصص[cite: 3]
     {
-        $request->validate([
-            'file' => 'required|file|mimes:jpeg,png,jpg,webp,pdf,doc,docx|max:10240',
-            'file_type' => 'nullable|string|max:50',
-            'attachable_type' => 'nullable|string|max:255',
-            'attachable_id' => 'nullable|integer',
-        ], [
-            'file.required' => 'يرجى اختيار ملف لرفعه.',
-            'file.file' => 'المدخل يجب أن يكون ملفاً صحيحاً.',
-            'file.mimes' => 'صيغ الملفات المدعومة هي: jpeg, png, jpg, webp, pdf, doc, docx.',
-            'file.max' => 'حجم الملف يجب ألا يتجاوز 10 ميجابايت.',
-        ]);
 
         if ($request->hasFile('file')) {
             $file = $request->file('file');

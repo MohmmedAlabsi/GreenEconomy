@@ -2,20 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\KnowledgeBaseItem;
-use Illuminate\Routing\Controller;
+use App\Http\Requests\StoreKnowledgeBaseRequest;
+use App\Http\Requests\UpdateKnowledgeBaseRequest;
 
 class KnowledgeBaseController extends Controller
 {
     public function index()
     {
         $items = KnowledgeBaseItem::with(['category', 'user'])->latest()->get();
-        
-        return response()->json([
-            'success' => true,
-            'data' => $items
-        ]);
+        return response()->json(['success' => true, 'data' => $items]);
     }
 
     public function show($id)
@@ -29,23 +25,9 @@ class KnowledgeBaseController extends Controller
         return response()->json(['message' => 'Create knowledge base item']);
     }
 
-    public function store(Request $request)
+    public function store(StoreKnowledgeBaseRequest $request)
     {
-        $validated = $request->validate([
-            'title'           => 'required|string|max:255',
-            'summary'         => 'nullable|string',
-            'content'         => 'nullable|string',
-            'type'            => 'required|string|max:50',
-            'status'          => 'nullable|string|max:50',
-            'category_id'     => 'required|exists:categories,id',
-            'media_url'       => 'nullable|string|max:255',
-            'file_size_bytes' => 'nullable|integer',
-            'view_count'      => '0',
-        ]);
-
-        // جلب رقم المستخدم من الـ Authentication أو من الطلب أو تعيين 1 كـ fallback
-
-        $item = KnowledgeBaseItem::create($validated);
+        $item = KnowledgeBaseItem::create($request->validated());
 
         return response()->json([
             'message' => 'Knowledge base item created successfully',
@@ -58,23 +40,10 @@ class KnowledgeBaseController extends Controller
         return response()->json(['message' => 'Edit knowledge base item', 'id' => $id]);
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateKnowledgeBaseRequest $request, string $id)
     {
         $item = KnowledgeBaseItem::findOrFail($id);
-
-        $validated = $request->validate([
-            'title'           => 'sometimes|string|max:255',
-            'summary'         => 'nullable|string',
-            'content'         => 'nullable|string',
-            'type'            => 'sometimes|string|max:50',
-            'status'          => 'nullable|string|max:50',
-            'category_id'     => 'sometimes|exists:categories,id',
-            'media_url'       => 'nullable|string|max:255',
-            'file_size_bytes' => 'nullable|integer',
-
-        ]);
-
-        $item->update($validated);
+        $item->update($request->validated());
 
         return response()->json([
             'message' => 'Knowledge base item updated successfully',
@@ -84,9 +53,7 @@ class KnowledgeBaseController extends Controller
 
     public function destroy(string $id)
     {
-        $item = KnowledgeBaseItem::findOrFail($id);
-        $item->delete();
-
+        KnowledgeBaseItem::findOrFail($id)->delete();
         return response()->json(['message' => 'Knowledge base item deleted successfully']);
     }
 }

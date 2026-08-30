@@ -8,6 +8,7 @@ use App\Models\EngineerProfile;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use App\Http\Requests\RejectEngineerJoinRequest;
 
 class AdminEngineerController extends Controller
 {
@@ -77,11 +78,8 @@ class AdminEngineerController extends Controller
     }
 
     // 3. رفض الطلب وتحديث حالته وحفظ السبب مع إرسال إشعار
-    public function rejectRequest(Request $request, $id)
+    public function rejectRequest(RejectEngineerJoinRequest $request, $id)
     {
-        $request->validate([
-            'notes' => 'required|string|max:500'
-        ]);
 
         $joinRequest = EngineerJoinRequest::findOrFail($id);
 
