@@ -17,12 +17,17 @@ class SpecializationFactory extends Factory
             'role_id' => Role::inRandomOrder()->first()->id,
 
             'name' => fake()->randomElement([
-                'Agricultural Engineer',
-                'Plant Disease Specialist',
-                'Irrigation Specialist',
-                'Soil Specialist',
-                'Green Agriculture Consultant',
-                'Crop Production Expert',
+             'تربة ومياة',
+             'افات وامراض النبات', 
+             'زراعة بدون تربة',  
+             'انتاج محاصيل حقلية', 
+             'انتاج محاصيل بستانية',  
+             'مختص البن ومحاصيل نقدية',  
+             'مختص ادارة مشاريع',  
+             'مختص ارشاد زراعي',  
+             'مختص ثروة حيوانية',  
+             'مختص تصميم وانشاء شبكات ري',  
+             'مختص زرعة عضوية'
             ]),
 
             'created_at' => now(),
