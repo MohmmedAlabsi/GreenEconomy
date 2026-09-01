@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FieldVisitReport;
 use App\Models\FieldVisit;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreFieldVisitReportRequest;
 
 class FieldVisitReportController extends Controller
@@ -37,9 +38,11 @@ class FieldVisitReportController extends Controller
 
             $engineerId = $visit->getAttribute('engineer_id') ?? auth()->id;
 
-            $filePath = null;
+            $fileUrl = null;
             if ($request->hasFile('attachment')) {
-                $filePath = $request->file('attachment')->store('visit_reports', 'public');
+                // الرفع إلى Supabase
+                $filePath = $request->file('attachment')->store('visit_reports', 'supabase');
+                $fileUrl = rtrim(config('filesystems.disks.supabase.url'), '/') . '/' . $filePath;
             }
 
             $report = FieldVisitReport::create([
@@ -49,7 +52,8 @@ class FieldVisitReportController extends Controller
                 'recommendations'   => $validatedData['recommendations'],
                 'prescribed_inputs' => $validatedData['prescribed_inputs'] ?? null,
                 'notes'             => $validatedData['notes'] ?? null,
-                'attachment'        => $filePath,
+                // حفظ الرابط المباشر للمرفق
+                'attachment'        => $fileUrl,
             ]);
 
             return response()->json([

@@ -77,30 +77,31 @@ class AdminEngineerController extends Controller
         ]);
     }
 
-    // 3. رفض الطلب وتحديث حالته وحفظ السبب مع إرسال إشعار
     public function rejectRequest(RejectEngineerJoinRequest $request, $id)
     {
-
         $joinRequest = EngineerJoinRequest::findOrFail($id);
 
-        // تحديث الطلب ليكون مرفوضاً مع حفظ السبب
-        $joinRequest->update([
-            'status' => 'rejected',
-            'notes'  => $request->notes,
-        ]);
-
-        // إرسال إشعار برفض الطلب (باعتبار أن الحساب لم يُنشأ بعد في users، يمكن توجيه الإشعار كعام أو عبر البريد، أو حفظ الـ user_id إن وُجد، هنا سنتركه specific مع بيانات توضيحية أو إشعار عام)
+        // 1. إنشاء الإشعار بالرفض (كما في كودك الأصلي)
         Notification::create([
             'audience' => 'specific',
             'title'    => 'اعتذار عن قبول طلب الانضمام',
             'body'     => 'نأسف إبلاغك بأنه تم رفض طلب انضمامك للأسباب التالية: ' . $request->notes,
             'priority' => 'normal',
-            'user_id'  => null, // أو تخزين معرف المستخدم إن وجد
+            'user_id'  => null, 
         ]);
+
+        // 2. حذف ملف السيرة الذاتية (CV) من مساحة Supabase لتنظيف التخزين
+        if ($joinRequest->cv_file && str_contains($joinRequest->cv_file, 'supabase.co')) {
+            $oldCvPath = preg_replace('/^.*\/cv_files\//', 'cv_files/', $joinRequest->cv_file);
+            \Illuminate\Support\Facades\Storage::disk('supabase')->delete($oldCvPath);
+        }
+
+        // 3. حذف الطلب نهائياً من السجلات
+        $joinRequest->delete();
 
         return response()->json([
             'status'  => true,
-            'message' => 'تم رفض الطلب بنجاح وإرسال الإشعار للمهندس.'
+            'message' => 'تم رفض الطلب وحذفه من السجلات بنجاح.'
         ]);
     }
 }

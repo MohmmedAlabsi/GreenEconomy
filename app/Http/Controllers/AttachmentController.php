@@ -12,16 +12,14 @@ use App\Http\Requests\StoreAttachmentRequest;
 
 class AttachmentController extends Controller
 {
-    /**
-     * رفع ملف جديد وتخزينه في النظام.
-     */
-    public function store(StoreAttachmentRequest $request) // استخدمنا الـ Request المخصص[cite: 3]
+    public function store(StoreAttachmentRequest $request)
     {
-
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('attachments', $fileName, 'public');
+            
+            // الرفع إلى Supabase
+            $filePath = $file->storeAs('green-economy-files', $fileName, 'supabase');
 
             $attachableType = $request->input('attachable_type', User::class);
             $attachableId = $request->input('attachable_id', Auth::id() ?? 0);
@@ -34,7 +32,8 @@ class AttachmentController extends Controller
                 'file_path' => $filePath,
                 'file_type' => $request->input('file_type', $file->getClientMimeType()),
                 'file_size' => $file->getSize(),
-                'url' => asset('storage/' . $filePath),
+                // جلب الرابط المباشر من Supabase
+                'url' => rtrim(config('filesystems.disks.supabase.url'), '/') . '/' . $filePath
             ]);
 
             return response()->json([
@@ -46,9 +45,6 @@ class AttachmentController extends Controller
         return response()->json(['message' => 'حدث خطأ أثناء رفع الملف'], 400);
     }
 
-    /**
-     * عرض تفاصيل مرفق معين.
-     */
     public function show($id)
     {
         if ($response = $this->ensureAuthenticated()) {
@@ -64,9 +60,6 @@ class AttachmentController extends Controller
         return response()->json(['data' => $attachment], 200);
     }
 
-    /**
-     * حذف مرفق من السيرفر وقاعدة البيانات.
-     */
     public function destroy($id)
     {
         if ($response = $this->ensureAuthenticated()) {
@@ -85,8 +78,9 @@ class AttachmentController extends Controller
             ], 403);
         }
 
-        if (Storage::disk('public')->exists($attachment->file_path)) {
-            Storage::disk('public')->delete($attachment->file_path);
+        // الحذف من Supabase
+        if (Storage::disk('supabase')->exists($attachment->file_path)) {
+            Storage::disk('supabase')->delete($attachment->file_path);
         }
 
         $attachment->delete();
@@ -104,5 +98,4 @@ class AttachmentController extends Controller
 
         return null;
     }
-    
 }

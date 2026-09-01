@@ -15,9 +15,9 @@ class RegisterUserRequest extends FormRequest
     {
         return [
             'name'                => 'required|string|max:255', // كما هو في الكود الأصلي[cite: 4]
-            'email'               => 'required|string|email|max:255|unique:users',
+            'email'               => 'required|string|email|max:255|unique:users,email|unique:engineer_join_requests,email',
             'password'            => 'required|string|min:8|confirmed',
-            'phone'               => 'nullable|string|max:20',
+            'phone'               => 'required|string|max:20|unique:users,phone|unique:engineer_join_requests,phone',
             'role_id'             => 'required|exists:roles,id',
             'region_id'           => 'required|exists:regions,id',
             'district'            => 'required|string|max:255',

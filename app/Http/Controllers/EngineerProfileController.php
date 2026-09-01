@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\EngineerProfile;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreEngineerProfileRequest;
 use App\Http\Requests\UpdateEngineerProfileRequest;
 
@@ -43,13 +44,19 @@ class EngineerProfileController extends Controller
             'bio'                   => $validated['bio'] ?? null,
         ];
 
+        // جلب الرابط الأساسي من الإعدادات
+        $baseUrl = rtrim(config('filesystems.disks.supabase.url'), '/');
+
+        // رفع ملف الـ CV وتوليد الرابط
         if ($request->hasFile('cv_file')) {
-            $profileData['cv_file'] = $request->file('cv_file')->store('cv_files', 'public');
+            $cvPath = $request->file('cv_file')->store('cv_files', 'supabase');
+            $profileData['cv_file'] = $baseUrl . '/' . $cvPath;
         }
         
+        // رفع الصورة الشخصية وتوليد الرابط
         if ($request->hasFile('avatar')) {
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = asset('storage/' . $avatarPath);
+            $avatarPath = $request->file('avatar')->store('avatars', 'supabase');
+            $user->avatar = $baseUrl . '/' . $avatarPath;
             $user->save();
         }
 
@@ -67,7 +74,33 @@ class EngineerProfileController extends Controller
     public function update(UpdateEngineerProfileRequest $request, string $id)
     {
         $profile = EngineerProfile::findOrFail($id);
-        $profile->update($request->validated());
+        $user = User::find($profile->user_id);
+        $validated = $request->validated();
+        
+        $baseUrl = rtrim(config('filesystems.disks.supabase.url'), '/');
+
+        // تحديث ملف CV مع حذف الملف القديم من السيرفر
+        if ($request->hasFile('cv_file')) {
+            if ($profile->cv_file && str_contains($profile->cv_file, 'supabase.co')) {
+                $oldCvPath = preg_replace('/^.*\/cv_files\//', 'cv_files/', $profile->cv_file);
+                Storage::disk('supabase')->delete($oldCvPath);
+            }
+            $cvPath = $request->file('cv_file')->store('cv_files', 'supabase');
+            $validated['cv_file'] = $baseUrl . '/' . $cvPath;
+        }
+
+        // تحديث الصورة الشخصية مع حذف الصورة القديمة
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar && str_contains($user->avatar, 'supabase.co')) {
+                $oldAvatarPath = preg_replace('/^.*\/avatars\//', 'avatars/', $user->avatar);
+                Storage::disk('supabase')->delete($oldAvatarPath);
+            }
+            $avatarPath = $request->file('avatar')->store('avatars', 'supabase');
+            $user->avatar = $baseUrl . '/' . $avatarPath;
+            $user->save();
+        }
+
+        $profile->update($validated);
 
         return response()->json([
             'message' => 'Engineer profile updated successfully',
@@ -78,6 +111,13 @@ class EngineerProfileController extends Controller
     public function destroy(string $id)
     {
         $profile = EngineerProfile::findOrFail($id);
+        
+        // حذف ملف الـ CV من Supabase قبل مسح السجل
+        if ($profile->cv_file && str_contains($profile->cv_file, 'supabase.co')) {
+            $oldCvPath = preg_replace('/^.*\/cv_files\//', 'cv_files/', $profile->cv_file);
+            Storage::disk('supabase')->delete($oldCvPath);
+        }
+        
         $profile->delete();
 
         return response()->json(['message' => 'Engineer profile deleted successfully']);

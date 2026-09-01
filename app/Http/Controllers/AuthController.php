@@ -17,16 +17,27 @@ class AuthController extends Controller
     /**
      * تسجيل حساب جديد في جدول users أو حفظ طلب انضمام المهندس في جدول الطلبات المؤقتة
      */
-    public function register(RegisterUserRequest $request) // استخدام الـ Request الخاص[cite: 4]
+    public function register(RegisterUserRequest $request)
     {
         // 1. تحديد رقم دور المهندس ديناميكياً أو برقم ثابت (مثلاً 3)
-        $engineerRoleId = 3; // استبدله بالرقم الفعلي لدور المهندس في جدول roles لديك
+        $engineerRoleId = 3;
 
         // إذا كان المسجل مهندساً (حسب الـ role_id)
         if ($request->role_id == $engineerRoleId) {
-            $cvPath = null;
-            if ($request->hasFile('cv_file')) {
-                $cvPath = $request->file('cv_file')->store('cv_files', 'public');
+            $cvFileUrl = null;
+            if ($request->hasFile('cv_file') && $request->file('cv_file')->isValid()) {
+                $baseUrl = rtrim(config('filesystems.disks.supabase.url'), '/');
+                $cvPath = $request->file('cv_file')->store('cv_files', 'supabase');
+
+                // التحقق من أن الرفع نجح وتم إرجاع المسار
+                if ($cvPath) { 
+                    $cvFileUrl = $baseUrl . '/' . $cvPath; 
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'فشل رفع السيرة الذاتية إلى وحدة التخزين (Supabase). تأكد من إعدادات الربط.'
+                    ], 500);
+                }
             }
 
             // حفظ الطلب في جدول طلبات المهندسين المؤقتة
@@ -42,7 +53,7 @@ class AuthController extends Controller
                 'qualification'       => $request->qualification,
                 'years_of_experience' => $request->years_of_experience,
                 'bio'                 => $request->bio,
-                'cv_file'             => $cvPath,
+                'cv_file'             => $cvFileUrl, // تم تحديث المتغير هنا
                 'status'              => 'pending',
             ]);
 
@@ -89,9 +100,9 @@ class AuthController extends Controller
     }
 
     /**
-     * تسجيل الدخول[cite: 8]
+     * تسجيل الدخول
      */
-    public function login(LoginUserRequest $request) // استخدام الـ Request الخاص[cite: 4]
+    public function login(LoginUserRequest $request)
     {
 
         $user = User::where('email', $request->email)->first();
