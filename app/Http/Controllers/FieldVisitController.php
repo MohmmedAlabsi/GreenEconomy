@@ -32,7 +32,7 @@ class FieldVisitController extends Controller
             $query->where('status', $request->status);
         }
 
-        $visits = $query->paginate(10);
+        $visits = $query->paginate(50);
         return response()->json($visits);
     }
 
@@ -45,19 +45,58 @@ class FieldVisitController extends Controller
     /**
      * إنشاء طلب زيارة ميدانية جديد (المزارع)
      */
-    public function store(StoreFieldVisitRequest $request)
+public function store(StoreFieldVisitRequest $request)
     {
         $validated = $request->validated();
+        
+        // تعيين القيم الافتراضية
         $validated['current_step'] = 1;
         $validated['status'] = $validated['status'] ?? 'submitted';
 
+        // 1. إنشاء طلب النزول الميداني
         $visit = FieldVisit::create($validated);
         
+        // 2. معالجة ورفع المرفقات (الصور وصورة الهوية) إلى Supabase وتخزينها في جدول attachments
+        if ($request->hasFile('images') || $request->hasFile('id_card_image')) {
+            $files = [];
+            
+            if ($request->hasFile('id_card_image')) {
+                $files[] = $request->file('id_card_image');
+            }
+            
+            if ($request->hasFile('images')) {
+                $files = array_merge($files, $request->file('images'));
+            }
+
+            $baseUrl = rtrim(config('filesystems.disks.supabase.url'), '/');
+
+            foreach ($files as $file) {
+                if ($file->isValid()) {
+                    $fileName = time() . '_' . \Illuminate\Support\Str::random(10) . '.' . $file->getClientOriginalExtension();
+                    
+                    // رفع الملف إلى حاوية Supabase (ضمن مجلد attachments أو field_visits)
+                    $filePath = $file->storeAs('field_visits', $fileName, 'supabase');
+
+                    // حفظ بيانات المرفق في جدول attachments باستخدام الهيكل المعتمد
+                    \App\Models\Attachment::create([
+                        'attachable_type' => FieldVisit::class,
+                        'attachable_id'   => $visit->id,
+                        'user_id'         => $visit->user_id,
+                        'file_name'       => $file->getClientOriginalName(),
+                        'file_path'       => $filePath,
+                        'file_type'       => $file->getClientMimeType(),
+                        'file_size'       => $file->getSize(),
+                        'url'             => $baseUrl . '/' . $filePath,
+                    ]);
+                }
+            }
+        }
+
+        // إرسال الإشعارات للإدمن والمزارع
         $admin = \App\Models\User::whereHas('role', function($q) {
             $q->where('name', 'Admin');
         })->first();
 
-        // إشعار للأدمن بطلب جديد
         if ($admin) {
             Notification::create([
                 'audience' => 'specific',
@@ -68,7 +107,6 @@ class FieldVisitController extends Controller
             ]);
         }
 
-        // إشعار للمزارع بتأكيد الاستلام
         if ($visit->user_id) {
             Notification::create([
                 'audience' => 'specific',
@@ -80,7 +118,7 @@ class FieldVisitController extends Controller
         }
 
         return response()->json([
-            'message' => 'Field visit created successfully',
+            'message' => 'Field visit created successfully with attachments',
             'data'    => $visit->load(['user', 'attachments'])
         ], 201);
     }
@@ -198,45 +236,71 @@ class FieldVisitController extends Controller
      */
     public function submitReport(SubmitReportFieldVisitRequest $request, $id)
     {
-        $visit = FieldVisit::findOrFail($id);
-        $validated = $request->validated();
-        
-        $admin = \App\Models\User::whereHas('role', function($q) {
-            $q->where('name', 'Admin');
-        })->first();
+        try {
+            $visit = FieldVisit::findOrFail($id);
+            $validated = $request->validated();
+            
+            $admin = \App\Models\User::whereHas('role', function($q) {
+                $q->where('name', 'Admin');
+            })->first();
 
-        FieldVisitReport::updateOrCreate(
-            ['field_visit_id' => $visit->id],
-            [
-                'engineer_id'       => $visit->engineer_id ?? $request->user()->id,
-                'diagnosis'         => $validated['diagnosis'],
-                'recommendations'   => $validated['recommendations'],
-                'prescribed_inputs' => $validated['prescribed_inputs'] ?? null,
-                'notes'             => $validated['notes'] ?? null,
-            ]
-        );
+            $fileUrl = null;
 
-        $visit->update([
-            'current_step' => 8,
-            'status'       => 'completed',
-        ]);
+            // معالجة ورفع ملف التقرير إلى Supabase Storage
+            if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
+                $file = $request->file('attachment');
+                $fileName = time() . '_' . \Illuminate\Support\Str::random(10) . '.' . $file->getClientOriginalExtension();
+                
+                // استخدام القرص العام 'public' أو 's3' أو 'supabase' بحسب إعداداتك الفعلية
+                $filePath = $file->storeAs('visit_reports', $fileName, 'supabase');
+                
+                $baseUrl = rtrim(config('filesystems.disks.supabase.url') ?? env('SUPABASE_URL'), '/');
+                $fileUrl = $baseUrl . '/' . $filePath;
+            }
 
-        if ($admin) {
-            Notification::create([
-                'audience' => 'specific',
-                'user_id'  => $admin->id,
-                'title'    => 'تم إرفاق وإتمام تقرير النزول',
-                'body'     => 'أتم المهندس رفع التقرير الميداني للطلب رقم #' . $visit->id . ' بنجاح.',
-                'priority' => 'normal',
+            $engineerId = $visit->engineer_id ?? optional($request->user())->id ?? 1;
+
+            FieldVisitReport::updateOrCreate(
+                ['field_visit_id' => $visit->id],
+                [
+                    'engineer_id'       => $engineerId,
+                    'diagnosis'         => $validated['diagnosis'],
+                    'recommendations'   => $validated['recommendations'],
+                    'prescribed_inputs' => $validated['prescribed_inputs'] ?? null,
+                    'notes'             => $validated['notes'] ?? null,
+                    'attachment'        => $fileUrl,
+                ]
+            );
+
+            $visit->update([
+                'current_step' => 8,
+                'status'       => 'completed',
             ]);
+
+            if ($admin) {
+                Notification::create([
+                    'audience' => 'specific',
+                    'user_id'  => $admin->id,
+                    'title'    => 'تم إرفاق وإتمام تقرير النزول',
+                    'body'     => 'أتم المهندس رفع التقرير الميداني للطلب رقم #' . $visit->id . ' بنجاح.',
+                    'priority' => 'normal',
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Field visit report submitted successfully',
+                'data'    => $visit->load(['user', 'engineer', 'report'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء حفظ التقرير',
+                'error'   => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Field visit report submitted successfully',
-            'data'    => $visit->load(['user', 'engineer', 'report'])
-        ]);
     }
-
     /**
      * تقييم الخدمة (المزارع) -> المرحلة 9
      */

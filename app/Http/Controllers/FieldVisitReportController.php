@@ -27,7 +27,8 @@ class FieldVisitReportController extends Controller
     {
         try {
             $validatedData = $request->validated();
-            $visit = FieldVisit::find($validatedData['field_visit_id']);
+            $visitId = $validatedData['field_visit_id'] ?? $id;
+            $visit = FieldVisit::find($visitId);
 
             if (!$visit) {
                 return response()->json([
@@ -36,6 +37,7 @@ class FieldVisitReportController extends Controller
                 ], 404);
             }
 
+            // التصحيح هنا: استدعاء auth()->id() كدالة وليست كخاصية
             $engineerId = $visit->getAttribute('engineer_id') ?? auth()->id;
 
             $fileUrl = null;
@@ -45,15 +47,22 @@ class FieldVisitReportController extends Controller
                 $fileUrl = rtrim(config('filesystems.disks.supabase.url'), '/') . '/' . $filePath;
             }
 
-            $report = FieldVisitReport::create([
-                'field_visit_id'    => $visit->getKey(),
-                'engineer_id'       => $engineerId,
-                'diagnosis'         => $validatedData['diagnosis'],
-                'recommendations'   => $validatedData['recommendations'],
-                'prescribed_inputs' => $validatedData['prescribed_inputs'] ?? null,
-                'notes'             => $validatedData['notes'] ?? null,
-                // حفظ الرابط المباشر للمرفق
-                'attachment'        => $fileUrl,
+            $report = FieldVisitReport::updateOrCreate(
+                ['field_visit_id' => $visit->getKey()],
+                [
+                    'engineer_id'       => $engineerId,
+                    'diagnosis'         => $validatedData['diagnosis'],
+                    'recommendations'   => $validatedData['recommendations'],
+                    'prescribed_inputs' => $validatedData['prescribed_inputs'] ?? null,
+                    'notes'             => $validatedData['notes'] ?? null,
+                    'attachment'        => $fileUrl,
+                ]
+            );
+
+            // تحديث حالة المهمة والخطوة في جدول field_visits لتصبح مكتملة
+            $visit->update([
+                'current_step' => 8,
+                'status'       => 'completed',
             ]);
 
             return response()->json([

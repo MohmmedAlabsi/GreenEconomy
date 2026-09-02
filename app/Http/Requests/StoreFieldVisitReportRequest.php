@@ -23,7 +23,7 @@ class StoreFieldVisitReportRequest extends FormRequest
             'recommendations'   => 'required|string',
             'prescribed_inputs' => 'nullable|string',
             'notes'             => 'nullable|string',
-            'attachment'        => 'nullable|file|max:10240',
+            'attachment'        => 'nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240',
         ];
     }
 }

@@ -16,10 +16,13 @@ return new class extends Migration
             $table->foreignId('engineer_id')->constrained('users')->cascadeOnDelete();
 
             // تفاصيل التقرير الميداني
-            $table->text('diagnosis');               // التشخيص النهائي للمشكلة
+            $table->text('diagnosis');              // التشخيص النهائي للمشكلة
             $table->text('recommendations');         // التوصيات وخطة العلاج
             $table->text('prescribed_inputs')->nullable(); // المبيدات والأسمدة الموصى بها
             $table->text('notes')->nullable();       // ملاحظات إضافية
+            
+            // إضافة عمود لتخزين رابط المرفق القادم من Supabase Storage
+            $table->text('attachment')->nullable(); 
 
             $table->timestamps();
         });

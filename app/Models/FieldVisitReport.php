@@ -16,6 +16,7 @@ class FieldVisitReport extends Model
         'recommendations',
         'prescribed_inputs',
         'notes',
+        'attachment',
     ];
 
     // الزيارة الميدانية المرتبطة بالتقرير
