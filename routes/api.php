@@ -67,6 +67,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
+    Route::post('/user/password', [UserController::class, 'updatePassword']);
+
 
     // مسارات الإشعارات العامة لجميع المستخدمين المسجلين (مزارع، مهندس، مدير)
     Route::get('/notifications', [NotificationController::class, 'index']);

@@ -23,11 +23,13 @@ class FieldVisitReportController extends Controller
         }
     }
 
-    public function store(StoreFieldVisitReportRequest $request, $id = null)
+     public function store(StoreFieldVisitReportRequest $request, $id = null)
     {
         try {
             $validatedData = $request->validated();
-            $visitId = $validatedData['field_visit_id'] ?? $id;
+            
+            // استخدام الـ id القادم من الرابط إن وجد، وإلا فمن البيانات المرسلة
+            $visitId = $id ?? $validatedData['field_visit_id'] ?? null;
             $visit = FieldVisit::find($visitId);
 
             if (!$visit) {
@@ -37,12 +39,10 @@ class FieldVisitReportController extends Controller
                 ], 404);
             }
 
-            // التصحيح هنا: استدعاء auth()->id() كدالة وليست كخاصية
             $engineerId = $visit->getAttribute('engineer_id') ?? auth()->id;
 
             $fileUrl = null;
             if ($request->hasFile('attachment')) {
-                // الرفع إلى Supabase
                 $filePath = $request->file('attachment')->store('visit_reports', 'supabase');
                 $fileUrl = rtrim(config('filesystems.disks.supabase.url'), '/') . '/' . $filePath;
             }
@@ -59,7 +59,6 @@ class FieldVisitReportController extends Controller
                 ]
             );
 
-            // تحديث حالة المهمة والخطوة في جدول field_visits لتصبح مكتملة
             $visit->update([
                 'current_step' => 8,
                 'status'       => 'completed',

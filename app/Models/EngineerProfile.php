@@ -13,6 +13,7 @@ class EngineerProfile extends Model
         'user_id',
         'specialization_id',
         'years_of_experience',
+        'qualification',
         'bio',
         'cv_file',
     ];

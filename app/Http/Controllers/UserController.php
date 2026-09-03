@@ -136,4 +136,37 @@ class UserController extends Controller
             ], 400); //[cite: 31]
         }
     }
+
+    public function updatePassword(Request $request)
+    {
+        $user = $request->user();
+        
+        // منع انهيار النظام إذا لم يتم إرسال التتوكن أو كان المستخدم غير مسجل دخول
+        if (!$user) {
+            return response()->json([
+                'message' => 'غير مصرح لك، يرجى تسجيل الدخول مرة أخرى.'
+            ], 401);
+        }
+
+        $request->validate([
+            'current_password' => ['required'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'كلمة المرور الحالية غير صحيحة.',
+                'errors' => [
+                    'current_password' => ['كلمة المرور الحالية غير صحيحة.']
+                ]
+            ], 422);
+        }
+
+        $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'تم تحديث كلمة المرور بنجاح'
+        ], 200);
+    }
 }

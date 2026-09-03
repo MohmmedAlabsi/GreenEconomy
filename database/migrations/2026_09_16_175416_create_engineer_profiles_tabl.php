@@ -17,14 +17,14 @@ return new class extends Migration
             // الربط مع جدول المستخدمين (في حال حذف المستخدم يُحذف بروفايله تلقائياً)
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
 
-            // الربط مع التخصص (المنقول من جدول users)
+            // الربط مع التخصص
             $table->foreignId('specialization_id')->nullable()->constrained('specializations')->nullOnDelete();
 
             // البيانات المهنية والوثائق
             $table->integer('years_of_experience')->default(0);  // سنوات الخبرة
-            $table->text('bio')->nullable();                      // السيرة الذاتية النصية / نبذة
-            $table->string('cv_file')->nullable();                // رابط/ملف الـ CV
-
+            $table->string('qualification')->nullable();         // الدرجة العلمية / المؤهل
+            $table->text('bio')->nullable();                     // السيرة الذاتية النصية / نبذة
+            $table->string('cv_file')->nullable();               // رابط/ملف الـ CV
 
             $table->timestamps();
         });
