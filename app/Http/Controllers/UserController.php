@@ -9,34 +9,36 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Database\QueryException;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\UpdatePasswordRequest;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with(['region', 'role']); //[cite: 31]
+        // إضافة engineerProfile.specialization لضمان جلب بيانات التخصص والبروفايل مع كل مستخدم
+        $query = User::with(['region', 'role', 'engineerProfile.specialization']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('district', 'like', "%{$search}%");
-            }); //[cite: 31]
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%")
+                ->orWhere('district', 'like', "%{$search}%");
+            });
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->input('status')); //[cite: 31]
+            $query->where('status', $request->input('status'));
         }
         if ($request->filled('role_id')) {
-            $query->where('role_id', $request->input('role_id')); //[cite: 31]
+            $query->where('role_id', $request->input('role_id'));
         }
         if ($request->filled('region_id')) {
-            $query->where('region_id', $request->input('region_id')); //[cite: 31]
+            $query->where('region_id', $request->input('region_id'));
         }
 
-        $users = $query->latest()->paginate(10); //[cite: 31]
+        $users = $query->latest()->get();
         return response()->json($users);
     }
 
@@ -137,33 +139,14 @@ class UserController extends Controller
         }
     }
 
-    public function updatePassword(Request $request)
+
+    public function updatePassword(UpdatePasswordRequest $request)
     {
         $user = $request->user();
-        
-        // منع انهيار النظام إذا لم يتم إرسال التتوكن أو كان المستخدم غير مسجل دخول
-        if (!$user) {
-            return response()->json([
-                'message' => 'غير مصرح لك، يرجى تسجيل الدخول مرة أخرى.'
-            ], 401);
-        }
 
-        $request->validate([
-            'current_password' => ['required'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        $user->update([
+            'password' => \Illuminate\Support\Facades\Hash::make($request->validated()['password']),
         ]);
-
-        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
-            return response()->json([
-                'message' => 'كلمة المرور الحالية غير صحيحة.',
-                'errors' => [
-                    'current_password' => ['كلمة المرور الحالية غير صحيحة.']
-                ]
-            ], 422);
-        }
-
-        $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
-        $user->save();
 
         return response()->json([
             'message' => 'تم تحديث كلمة المرور بنجاح'

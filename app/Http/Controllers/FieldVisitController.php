@@ -13,6 +13,7 @@ use App\Http\Requests\AssignEngineerFieldVisitRequest;
 use App\Http\Requests\SubmitEstimateFieldVisitRequest;
 use App\Http\Requests\SubmitReportFieldVisitRequest;
 use App\Http\Requests\SubmitRatingFieldVisitRequest;
+use Illuminate\Support\Facades\Storage;
 
 class FieldVisitController extends Controller
 {
@@ -126,8 +127,29 @@ public function store(StoreFieldVisitRequest $request)
     public function update(UpdateFieldVisitRequest $request, string $id)
     {
         $visit = FieldVisit::findOrFail($id);
-        
-        $visit->update($request->validated());
+        $data = $request->validated();
+
+        // عند اعتذار المهندس: تفريغ المهندس، إعادة الخطوة، وإشعار الإدارة تلقائياً
+        if (isset($data['status']) && $data['status'] === 'rejected') {
+            $data['engineer_id'] = null;
+            $data['current_step'] = 2;
+
+            $admin = \App\Models\User::whereHas('role', function($q) {
+                $q->where('name', 'Admin');
+            })->first();
+
+            if ($admin) {
+                Notification::create([
+                    'audience' => 'specific',
+                    'user_id'  => $admin->id,
+                    'title'    => 'اعتذار مهندس عن مهمة نزول',
+                    'body'     => 'اعتذر المهندس عن تنفيذ طلب النزول رقم #' . $visit->id . '، ويتطلب الطلب إعادة إسناد.',
+                    'priority' => 'high',
+                ]);
+            }
+        }
+
+        $visit->update($data);
 
         return response()->json([
             'message' => 'Field visit updated successfully',
@@ -137,11 +159,57 @@ public function store(StoreFieldVisitRequest $request)
 
     public function destroy(string $id)
     {
-        $visit = FieldVisit::findOrFail($id);
+        // جلب الزيارة مع المرفقات والمستخدم
+        $visit = FieldVisit::with(['user', 'attachments'])->findOrFail($id);
+
+        // 1. حذف المرفقات المربوطة بالزيارة من Supabase Storage
+        if ($visit->attachments && $visit->attachments->isNotEmpty()) {
+            foreach ($visit->attachments as $attachment) {
+                $path = $attachment->file_path ?? $attachment->path;
+                if ($path) {
+                    // إذا كان المسار رابطاً كاملاً، يتم استخراج المسار النسبي داخل الـ Bucket
+                    $cleanPath = parse_url($path, PHP_URL_PATH);
+                    $cleanPath = ltrim(preg_replace('#^/storage/v1/object/public/[^/]+/#', '', $cleanPath), '/');
+
+                    Storage::disk('supabase')->delete($cleanPath ?: $path);
+                }
+                $attachment->delete();
+            }
+        }
+
+        // 2. إذا كانت الصور مخزنة كحقل JSON أو مصفوفة روابط مباشرة داخل السجل (مثل images أو id_card_image)
+        $directImages = array_filter([
+            $visit->id_card_image ?? null,
+            ...(is_array($visit->images ?? null) ? $visit->images : [])
+        ]);
+
+        foreach ($directImages as $imgUrl) {
+            $cleanPath = parse_url($imgUrl, PHP_URL_PATH);
+            $cleanPath = ltrim(preg_replace('#^/storage/v1/object/public/[^/]+/#', '', $cleanPath), '/');
+            Storage::disk('supabase')->delete($cleanPath ?: $imgUrl);
+        }
+
+        // 3. البحث عن المدير لإرسال إشعار الإلغاء إليه
+        $admin = \App\Models\User::whereHas('role', function($q) {
+            $q->where('name', 'Admin');
+        })->first();
+
+        if ($admin) {
+            $farmerName = $visit->contact_name ?? $visit->user?->name ?? 'المزارع';
+            Notification::create([
+                'audience' => 'specific',
+                'user_id'  => $admin->id,
+                'title'    => 'إلغاء طلب نزول ميداني',
+                'body'     => 'قام المزارع ' . $farmerName . ' بإلغاء طلب النزول الميداني رقم #' . $visit->id,
+                'priority' => 'high',
+            ]);
+        }
+
+        // 4. حذف سجل الزيارة من قاعدة البيانات
         $visit->delete();
 
         return response()->json([
-            'message' => 'Field visit deleted successfully'
+            'message' => 'Field visit and associated storage files deleted successfully'
         ]);
     }
 

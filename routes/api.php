@@ -25,6 +25,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\EngineerProfileController;
 use App\Http\Controllers\FieldVisitReportController;
 use App\Http\Controllers\AdminEngineerController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DraftController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -57,6 +59,7 @@ Route::get('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'show']
 Route::get('/platform_settings', [PlatformSettingController::class, 'index'])->name('api.platform-settings.index');
 // أضف هذا المسار في قسم Public Routes
 Route::get('/engineer_profiles', [EngineerProfileController::class, 'index'])->name('api.engineer-profiles.index');
+Route::get('/stats', [HomeController::class, 'getStats']);
 
 /*
 |--------------------------------------------------------------------------
@@ -72,7 +75,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // مسارات الإشعارات العامة لجميع المستخدمين المسجلين (مزارع، مهندس، مدير)
     Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::post('/notifications', [NotificationController::class, 'send']); // <--- أضف هذا المسار للإرسال
+    Route::post('/notifications', [NotificationController::class, 'send']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::match(['post', 'patch'], '/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     
@@ -82,6 +85,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/admin/engineer_join_requests/{id}/approve', [AdminEngineerController::class, 'approveRequest']);
         Route::post('/admin/engineer_join_requests/{id}/reject', [AdminEngineerController::class, 'rejectRequest']);
     });
+
+    Route::get('/drafts', [DraftController::class, 'show']);
+    Route::post('/drafts', [DraftController::class, 'store']);
+    Route::delete('/drafts', [DraftController::class, 'destroy']);
 
     // مسارات التقارير التشخيصية للزيارات الميدانية (محمية بالكامل)
     Route::get('/field_visit_reports', [FieldVisitReportController::class, 'index']);
@@ -102,6 +109,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware(['permission:manage feasibility studies|show feasibility studies'])->group(function () {
         Route::apiResource('feasibility_studies', FeasibilityStudyController::class);
+        Route::post('feasibility_studies/{id}/update', [FeasibilityStudyController::class, 'update']);
     });
 
     Route::middleware(['permission:manage feasibility requests|create feasibility request|view own feasibility request'])->group(function () {
@@ -110,6 +118,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::apiResource('plant_diseases', PlantDiseaseController::class);
     Route::apiResource('disease_treatments', DiseaseTreatmentController::class);
+    Route::apiResource('plants', PlantController::class);
 
     // إدارة الزيارات الميدانية ومراحل الرحلة
     Route::apiResource('field_visits', FieldVisitController::class);
@@ -128,6 +137,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     //Route::get('/engineer_profiles', [EngineerProfileController::class, 'show']);
     Route::post('/engineer_profiles', [EngineerProfileController::class, 'store']);
+    Route::put('/engineer_profiles/{id}', [EngineerProfileController::class, 'update']);
 
     // المرفقات
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('api.attachments.store');

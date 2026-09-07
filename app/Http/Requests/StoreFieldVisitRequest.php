@@ -19,6 +19,7 @@ class StoreFieldVisitRequest extends FormRequest
             'village_or_area'     => 'required|string|max:255',
             'nearest_landmark'    => 'nullable|string|max:255',
             'crop_type'           => 'required|string|max:100',
+            'specialization_id'   => 'nullable|exists:specializations,id',
             'area_size'           => 'required|numeric',
             'infestation_type'    => 'required|string|max:150',
             'priority_level'      => 'required|string|max:50',

@@ -57,6 +57,10 @@ return [
             'use_path_style_endpoint' => true,
             'throw' => false,
             'url' => env('SUPABASE_URL'),
+            'options' => [
+                'timeout' => 120,          // Total request timeout in seconds
+                'connect_timeout' => 60,   // Connection establishment timeout
+            ],
         ],
 
     ],

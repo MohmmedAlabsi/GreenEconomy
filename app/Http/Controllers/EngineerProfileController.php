@@ -11,10 +11,34 @@ use App\Http\Requests\UpdateEngineerProfileRequest;
 
 class EngineerProfileController extends Controller
 {
-    public function index()
+
+    public function index(Request $request)
     {
-        $profiles = EngineerProfile::with(['user', 'specialization'])->paginate(15);
-        return response()->json($profiles);
+        $profiles = EngineerProfile::with(['user.region', 'specialization'])->get();
+        
+        $engineers = $profiles->map(function ($profile) {
+            // جلب جميع التقييمات المرتبطة بهذا المهندس من جدول الزيارات الميدانية
+            $visitsWithRatings = \App\Models\FieldVisit::where('engineer_id', $profile->user_id)
+                ->whereNotNull('rating')
+                ->get();
+
+            $reviewsCount = $visitsWithRatings->count();
+            $averageRating = $reviewsCount > 0 ? round($visitsWithRatings->avg('rating'), 1) : 5;
+
+            return [
+                'id' => $profile->user_id,
+                'name' => $profile->user->name ?? 'مهندس بدون اسم',
+                'email' => $profile->user->email ?? '',
+                'governorate' => $profile->governorate ?? $profile->user->governorate ?? '',
+                'specialization_id' => $profile->specialization_id,
+                'specialization' => $profile->specialization, // جلب التخصص الحقيقي المرتبط بـ specialization_id
+                'engineerProfile' => $profile,
+                'average_rating' => $averageRating,
+                'reviews_count' => $reviewsCount,
+            ];
+        });
+
+        return response()->json(['data' => $engineers]);
     }
 
     public function show(Request $request, $id = null)
