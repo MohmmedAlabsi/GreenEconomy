@@ -12,10 +12,12 @@ class PlatformSetting extends Model
 
     protected $fillable = [
         'platform_name',
-        'default_language',
-        'timezone',
-        'date_format',
-        'production_api_key',
-        'test_api_key',
+        'support_email',
+        'support_phone',
+        'maintenance_mode',
+    ];
+
+    protected $casts = [
+        'maintenance_mode' => 'boolean',
     ];
 }

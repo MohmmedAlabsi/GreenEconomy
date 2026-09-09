@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('platform_settings', function (Blueprint $table) {
+        Schema::create('system_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('platform_name', 255)->default('Terra Admin');
-            $table->string('default_language', 10)->default('en');
-            $table->string('timezone', 100)->default('Asia/Dubai');
-            $table->string('date_format', 50)->default('DD/MM/YYYY');
-            $table->string('production_api_key', 255)->nullable();
-            $table->string('test_api_key', 255)->nullable();
-            $table->timestamp('updated_at')->nullable();
+            
+            // هوية المنصة وبيانات التواصل
+            $table->string('platform_name')->default('منصة الاقتصاد الأخضر');
+            $table->string('support_email')->nullable();
+            $table->string('support_phone')->nullable();
+            
+            // حالة المنصة التشغيلية
+            $table->boolean('maintenance_mode')->default(false);
+
+            $table->timestamps();
         });
     }
 

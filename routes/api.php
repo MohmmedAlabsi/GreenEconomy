@@ -56,7 +56,8 @@ Route::get('/plants/{id}', [PlantController::class, 'show'])->name('api.plants.s
 Route::get('/knowledge_base_item', [KnowledgeBaseController::class, 'index'])->name('api.knowledge-base.index');
 Route::get('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'show'])->name('api.knowledge-base.show');
 
-Route::get('/platform_settings', [PlatformSettingController::class, 'index'])->name('api.platform-settings.index');
+Route::get('/platform_settings', [PlatformSettingController::class, 'index']);
+
 // أضف هذا المسار في قسم Public Routes
 Route::get('/engineer_profiles', [EngineerProfileController::class, 'index'])->name('api.engineer-profiles.index');
 Route::get('/stats', [HomeController::class, 'getStats']);
@@ -95,12 +96,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/field_visits/{id}/report', [FieldVisitReportController::class, 'store']);
 
     Route::put('/users/{id}', [UserController::class, 'update']);
-    
+
     // مسارات الأدمن الإدارية
     Route::middleware(['role:Admin'])->group(function () {
         Route::apiResource('users', UserController::class);
         Route::apiResource('roles', RoleController::class);
         Route::put('/platform_settings', [PlatformSettingController::class, 'update'])->name('api.platform-settings.update');
+    });
+
+    Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+        Route::put('/settings', [PlatformSettingController::class, 'update']);
     });
 
     Route::middleware(['permission:manage consultations|answer consultations'])->group(function () {

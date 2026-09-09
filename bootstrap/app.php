@@ -16,13 +16,17 @@ return Application::configure(basePath: dirname(__DIR__))
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
 
-        $middleware->alias(['role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-         'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
-         ]);
+        // تطبيق فحص وضع الصيانة على كافة طلبات الـ API
+        $middleware->api(append: [
+            \App\Http\Middleware\CheckMaintenanceMode::class,
+        ]);
 
-        //
+        $middleware->alias([
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
