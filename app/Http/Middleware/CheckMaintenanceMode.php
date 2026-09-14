@@ -1,38 +1,34 @@
 <?php
 
 namespace App\Http\Middleware;
-
+use Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance;
+ 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
-class CheckMaintenanceMode
+class CheckMaintenanceMode extends PreventRequestsDuringMaintenance
 {
-    public function handle(Request $request, Closure $next)
+    protected $except = [
+        '/',                   
+        'login',               
+        'api/login',           
+        'api/platform_settings', 
+    ];
+
+    public function handle($request, Closure $next)
     {
-        // 1. استثناء مسارات لوحة تحكم المسؤول حتى يتمكن من تسجيل الدخول وإيقاف الصيانة
-        if ($request->is('api/admin/*') || $request->is('api/login')) {
-            return $next($request);
-        }
+        if ($this->app->isDownForMaintenance()) {
+            if (Auth::check()) {
+                $user = Auth::user();
+                $isAdmin = ($user->role_id == 1) || (method_exists($user, 'hasRole') && $user->hasRole('admin'));
 
-        // 2. فحص حالة الصيانة من جدول الإعدادات
-        $settings = DB::table('platform_settings')->first();
-
-        if ($settings && (bool) $settings->maintenance_mode) {
-            // استثناء المستخدم إذا كان مسجلاً كمسؤول (Admin Role ID = 1)
-            $user = $request->user();
-            if ($user && ($user->role_id == 1 || $user->role === 'Admin')) {
-                return $next($request);
+                if ($isAdmin) {
+                    return $next($request);
+                }
             }
-
-            return response()->json([
-                'maintenance' => true,
-                'message' => 'المنصة حالياً في وضع الصيانة والتطوير، يرجى المحاولة لاحقاً.',
-                'support_email' => $settings->support_email,
-                'support_phone' => $settings->support_phone,
-            ], 503);
         }
 
-        return $next($request);
+        return parent::handle($request, $next);
     }
 }

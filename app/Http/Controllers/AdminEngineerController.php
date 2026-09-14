@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\EngineerJoinRequest;
 use App\Models\User;
 use App\Models\EngineerProfile;
-use App\Models\Notification;
+use App\Notifications\GeneralNotification;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use App\Http\Requests\RejectEngineerJoinRequest;
+use Illuminate\Support\Facades\Storage;
 
 class AdminEngineerController extends Controller
 {
-    // 1. جلب قائمة طلبات الانضمام المعلقة لعرضها في لوحة التحكم[cite: 10]
+    // 1. جلب قائمة طلبات الانضمام المعلقة لعرضها في لوحة التحكم
     public function indexRequests()
     {
         $requests = EngineerJoinRequest::with(['specialization', 'region'])
@@ -26,30 +27,36 @@ class AdminEngineerController extends Controller
         ]);
     }
 
-    // 2. قبول الطلب ونقل البيانات وتفريغ الجدول[cite: 10]
-    public function approveRequest($id)
+    // 2. قبول الطلب ونقل البيانات وتفعيل الحساب
+    public function approveRequest(Request $request, $id)
     {
         $joinRequest = EngineerJoinRequest::findOrFail($id);
 
-        // أ. نقل البيانات العامة إلى جدول users وتفعيل الحساب[cite: 10]
+        // أ. إنشاء حساب المستخدم
         $user = User::create([
             'name'      => $joinRequest->name,
             'email'     => $joinRequest->email,
             'password'  => $joinRequest->password, 
             'phone'     => $joinRequest->phone,
-            'role_id'   => $joinRequest->role_id,
+            'role_id'   => $joinRequest->role_id ?? 3,
             'region_id' => $joinRequest->region_id,
             'district'  => $joinRequest->district,
             'status'    => 'active',
         ]);
 
-        // إسناد صلاحية Spatie للمهندس[cite: 10]
-        $role = Role::find($joinRequest->role_id);
-        if ($role) {
-            $user->assignRole($role);
+        // إسناد الدور إن وجد
+        try {
+            if (class_exists(Role::class) && method_exists($user, 'assignRole')) {
+                $role = Role::find($joinRequest->role_id);
+                if ($role) {
+                    $user->assignRole($role->name);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('تعذر إسناد صلاحية Spatie: ' . $e->getMessage());
         }
 
-        // ب. نقل البيانات المهنية إلى جدول EngineerProfile[cite: 10]
+        // ب. إنشاء الملف المهني للمهندس
         EngineerProfile::create([
             'user_id'             => $user->id,
             'specialization_id'   => $joinRequest->specialization_id,
@@ -59,16 +66,31 @@ class AdminEngineerController extends Controller
             'cv_file'             => $joinRequest->cv_file,
         ]);
 
-        // ج. إرسال إشعار للمهندس بقبول طلبه
-        Notification::create([
-            'audience' => 'specific',
-            'title'    => 'تم قبول طلب الانضمام',
-            'body'     => 'مبارك! تم قبول طلب انضمامك إلى المنصة كمهندس زراعي بنجاح.',
-            'priority' => 'high',
-            'user_id'  => $user->id, // ربط الإشعار باليوزر الجديد
-        ]);
+        // ج. إرسال الإشعار بدون استخدام auth() نهائياً
+        try {
+            // جلب الأدمن من كائن الطلب مباشرة $request->user()
+            $adminUser = $request->user();
+            $adminId = $adminUser ? $adminUser->id : null;
+            $adminName = $adminUser ? $adminUser->name : 'الإدارة';
 
-        // د. تفريغ وحذف الطلب من جدول الطلبات المؤقتة[cite: 10]
+            $user->notify(new GeneralNotification([
+                'title'            => 'تم قبول طلب الانضمام',
+                'body'             => 'مبارك! تم قبول طلب انضمامك إلى المنصة كمهندس زراعي معتمد.',
+                'priority'         => 'high',
+                'audience'         => 'specific',
+                'sender_id'        => $adminId,
+                'sender_name'      => $adminName,
+                'sender_role'      => 'admin',
+                'target_user_name' => $user->name,
+                'target_user_role' => 'engineer',
+                'type'             => 'account_approval',
+                'action_url'       => '/engineer',
+            ]));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('تعذر إرسال إشعار القبول للمهندس: ' . $e->getMessage());
+        }
+
+        // د. حذف الطلب المؤقت
         $joinRequest->delete();
 
         return response()->json([
@@ -76,27 +98,17 @@ class AdminEngineerController extends Controller
             'message' => 'تم قبول الطلب بنجاح، ونقل بيانات المهندس وتفعيل حسابه.'
         ]);
     }
-
     public function rejectRequest(RejectEngineerJoinRequest $request, $id)
     {
         $joinRequest = EngineerJoinRequest::findOrFail($id);
 
-        // 1. إنشاء الإشعار بالرفض (كما في كودك الأصلي)
-        Notification::create([
-            'audience' => 'specific',
-            'title'    => 'اعتذار عن قبول طلب الانضمام',
-            'body'     => 'نأسف إبلاغك بأنه تم رفض طلب انضمامك للأسباب التالية: ' . $request->notes,
-            'priority' => 'normal',
-            'user_id'  => null, 
-        ]);
-
-        // 2. حذف ملف السيرة الذاتية (CV) من مساحة Supabase لتنظيف التخزين
+        // 1. حذف ملف السيرة الذاتية (CV) من مساحة Supabase لتنظيف التخزين
         if ($joinRequest->cv_file && str_contains($joinRequest->cv_file, 'supabase.co')) {
             $oldCvPath = preg_replace('/^.*\/cv_files\//', 'cv_files/', $joinRequest->cv_file);
-            \Illuminate\Support\Facades\Storage::disk('supabase')->delete($oldCvPath);
+            Storage::disk('supabase')->delete($oldCvPath);
         }
 
-        // 3. حذف الطلب نهائياً من السجلات
+        // 2. حذف الطلب نهائياً من السجلات
         $joinRequest->delete();
 
         return response()->json([

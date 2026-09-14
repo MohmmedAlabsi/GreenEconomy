@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\FieldVisitReport;
 use App\Models\FieldVisit;
-use Illuminate\Support\Facades\Storage;
+use App\Models\User;
+use App\Notifications\GeneralNotification;
+use Illuminate\Support\Facades\Notification;
 use App\Http\Requests\StoreFieldVisitReportRequest;
 
 class FieldVisitReportController extends Controller
@@ -23,12 +26,11 @@ class FieldVisitReportController extends Controller
         }
     }
 
-     public function store(StoreFieldVisitReportRequest $request, $id = null)
+    public function store(StoreFieldVisitReportRequest $request, $id = null)
     {
         try {
             $validatedData = $request->validated();
             
-            // استخدام الـ id القادم من الرابط إن وجد، وإلا فمن البيانات المرسلة
             $visitId = $id ?? $validatedData['field_visit_id'] ?? null;
             $visit = FieldVisit::find($visitId);
 
@@ -39,10 +41,13 @@ class FieldVisitReportController extends Controller
                 ], 404);
             }
 
-            $engineerId = $visit->getAttribute('engineer_id') ?? auth()->id;
+            $currentUser = $request->user();
+            $engineerId = $visit->engineer_id ?? $currentUser?->id;
+            $engineer = User::find($engineerId) ?? $currentUser;
+            $engName = $engineer?->name ?? 'المهندس';
 
             $fileUrl = null;
-            if ($request->hasFile('attachment')) {
+            if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
                 $filePath = $request->file('attachment')->store('visit_reports', 'supabase');
                 $fileUrl = rtrim(config('filesystems.disks.supabase.url'), '/') . '/' . $filePath;
             }
@@ -63,6 +68,20 @@ class FieldVisitReportController extends Controller
                 'current_step' => 8,
                 'status'       => 'completed',
             ]);
+
+            $admins = User::where('role_id', 1)->orWhereHas('role', fn($q)=>$q->where('name', 'admin'))->get();
+            if ($admins->isNotEmpty()) {
+                Notification::send($admins, new GeneralNotification([
+                    'title'       => 'تم إرفاق وإتمام تقرير النزول',
+                    'body'        => 'أتم المهندس ' . $engName . ' رفع التقرير الميداني للطلب رقم #' . $visit->id . ' بنجاح.',
+                    'priority'    => 'normal',
+                    'type'        => 'field_visit',
+                    'sender_id'   => $engineerId,
+                    'sender_name' => $engName,
+                    'sender_role' => 'engineer',
+                    'action_url'  => '/admin/field-visits/' . $visit->id,
+                ]));
+            }
 
             return response()->json([
                 'success' => true,

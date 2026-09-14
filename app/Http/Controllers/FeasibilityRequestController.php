@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\FeasibilityRequest;
+use App\Models\User;
+use App\Notifications\GeneralNotification;
+use Illuminate\Support\Facades\Notification;
 use App\Http\Requests\StoreFeasibilityRequest;
 use App\Http\Requests\UpdateFeasibilityRequest;
 
@@ -29,27 +32,34 @@ class FeasibilityRequestController extends Controller
     {
         $requestData = FeasibilityRequest::create($request->validated());
         
-        $admin = \App\Models\User::whereHas('role', function($q) {
-            $q->where('name', 'Admin');
-        })->first();
+        $farmer = User::find($requestData->user_id);
+        $farmerName = $farmer?->name ?? 'المزارع';
 
-        if ($admin) {
-            \App\Models\Notification::create([
-                'audience' => 'specific',
-                'user_id'  => $admin->id,
-                'title'    => 'طلب دراسة جدوى جديد',
-                'body'     => 'تم تقديم طلب دراسة جدوى للمشروع: "' . $requestData->project_title . '" من قبل المستخدم ID: ' . $requestData->user_id,
-                'priority' => 'normal',
-            ]);
+        // 1. إشعار مدراء النظام باسم المزارع الصريح وليس رقمه
+        $admins = User::admins()->get();
+        if ($admins->isNotEmpty()) {
+            Notification::send($admins, new GeneralNotification([
+                'title'       => 'طلب دراسة جدوى جديد',
+                'body'        => 'قام المزارع ' . $farmerName . ' بتقديم طلب دراسة جدوى لمشروع: "' . $requestData->project_title . '"',
+                'priority'    => 'normal',
+                'type'        => 'feasibility_request',
+                'sender_id'   => $requestData->user_id,
+                'sender_name' => $farmerName,
+                'sender_role' => 'farmer',
+                'action_url'  => '/admin/feasibility-requests/' . $requestData->id,
+            ]));
         }
 
-        \App\Models\Notification::create([
-            'audience' => 'specific',
-            'user_id'  => $requestData->user_id,
-            'title'    => 'تم استلام طلب دراسة الجدوى',
-            'body'     => 'تم حفظ طلب دراسة الجدوى الخاص بمشروع "' . $requestData->project_title . '" وسيتم معالجته قريباً.',
-            'priority' => 'normal',
-        ]);
+        // 2. إشعار المزارع بتأكيد الاستلام
+        if ($farmer) {
+            $farmer->notify(new GeneralNotification([
+                'title'      => 'تم استلام طلب دراسة الجدوى',
+                'body'       => 'تم حفظ طلب دراسة الجدوى الخاص بمشروع "' . $requestData->project_title . '" وسيتم معالجته قريباً.',
+                'priority'   => 'normal',
+                'type'       => 'feasibility_request',
+                'action_url' => '/farmer/feasibility-requests/' . $requestData->id,
+            ]));
+        }
 
         return response()->json([
             'message' => 'Feasibility request created successfully',

@@ -70,11 +70,6 @@ class User extends Authenticatable
         return $this->belongsTo(Region::class);
     }
 
-    public function preferences()
-    {
-        return $this->hasOne(UserPreference::class);
-    }
-
     public function feasibilityStudies()
     {
         return $this->hasMany(FeasibilityStudy::class);

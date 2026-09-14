@@ -27,6 +27,9 @@ use App\Http\Controllers\FieldVisitReportController;
 use App\Http\Controllers\AdminEngineerController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DraftController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\FarmerDashboardController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -72,13 +75,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
     Route::post('/user/password', [UserController::class, 'updatePassword']);
-
+    Route::get('/engineer/dashboard-data', [DashboardController::class, 'engineerData']);
 
     // مسارات الإشعارات العامة لجميع المستخدمين المسجلين (مزارع، مهندس، مدير)
     Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::post('/notifications', [NotificationController::class, 'send']);
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-    Route::match(['post', 'patch'], '/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    Route::post('/notifications/send', [NotificationController::class, 'send']);
     
     // مسارات إدارة طلبات المهندسين (للأدمن)
     Route::middleware(['auth:sanctum', 'role:Admin'])->group(function () {
@@ -102,6 +105,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('users', UserController::class);
         Route::apiResource('roles', RoleController::class);
         Route::put('/platform_settings', [PlatformSettingController::class, 'update'])->name('api.platform-settings.update');
+        Route::get('/admin/dashboard-data', [AdminDashboardController::class, 'index']);
     });
 
     Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
@@ -138,6 +142,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/knowledge_base_item', [KnowledgeBaseController::class, 'store'])->name('api.knowledge-base.store');
         Route::put('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'update'])->name('api.knowledge-base.update');
         Route::delete('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'destroy'])->name('api.knowledge-base.destroy');
+    });
+
+    Route::middleware(['auth:sanctum'])->prefix('farmer')->group(function () {
+    Route::get('/dashboard-data', [FarmerDashboardController::class, 'index']);
     });
 
     //Route::get('/engineer_profiles', [EngineerProfileController::class, 'show']);

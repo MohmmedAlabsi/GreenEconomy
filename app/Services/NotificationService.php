@@ -2,53 +2,52 @@
 
 namespace App\Services;
 
-use App\Models\Notification;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
-/**
- * Centralizes the creation of platform notifications.
- *
- * Previously every controller duplicated the same `Notification::create([...])`
- * block (and the "find the Admin user" query). This service is the single
- * source of truth for that behaviour so the payload shape stays consistent.
- */
 class NotificationService
 {
-    /**
-     * Create a notification.
-     *
-     * Mirrors the exact payload the controllers used to build inline.
-     */
-    public function notify(
-        ?int $userId,
-        string $title,
-        string $body,
-        string $priority = 'normal',
-        string $audience = 'specific'
-    ): Notification {
-        return Notification::create([
-            'audience' => $audience,
-            'user_id'  => $userId,
-            'title'    => $title,
-            'body'     => $body,
-            'priority' => $priority,
-        ]);
-    }
-
-    /**
-     * Notify the Admin user (if one exists).
-     *
-     * Replaces the repeated `User::whereHas('role', ...)->first()` + create block.
-     * Returns null when no Admin user is found, matching the previous guarded behaviour.
-     */
-    public function notifyAdmin(string $title, string $body, string $priority = 'normal'): ?Notification
+    public static function send(array $data, array $recipientIds = [], string $audience = 'specific')
     {
-        $admin = User::admins()->first();
+        return DB::transaction(function () use ($data, $recipientIds, $audience) {
+            // 1. إنشاء سجل الإشعار
+            $notificationId = DB::table('notifications')->insertGetId([
+                'title'      => $data['title'],
+                'body'       => $data['body'],
+                'priority'   => $data['priority'] ?? 'normal',
+                'audience'   => $audience,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-        if (! $admin) {
-            return null;
-        }
+            // 2. تحديد المستلمين
+            if ($audience === 'all') {
+                $recipientIds = User::pluck('id')->toArray();
+            } elseif ($audience === 'farmers') {
+                $recipientIds = User::role('farmer')->pluck('id')->toArray();
+            } elseif ($audience === 'engineers') {
+                $recipientIds = User::role('engineer')->pluck('id')->toArray();
+            } elseif ($audience === 'admins') {
+                $recipientIds = User::role('admin')->pluck('id')->toArray();
+            }
 
-        return $this->notify($admin->id, $title, $body, $priority);
+            // 3. ربط كل مستخدم بالإشعار بحالة غير مقروء خاصة به
+            $records = [];
+            foreach (array_unique($recipientIds) as $uid) {
+                $records[] = [
+                    'notification_id' => $notificationId,
+                    'user_id'         => $uid,
+                    'is_read'         => false,
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
+                ];
+            }
+
+            if (!empty($records)) {
+                DB::table('notification_user')->insert($records);
+            }
+
+            return $notificationId;
+        });
     }
 }

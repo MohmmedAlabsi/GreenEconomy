@@ -7,6 +7,7 @@ use App\Models\FeasibilityStudy;
 use App\Http\Requests\StoreFeasibilityStudyRequest;
 use App\Http\Requests\UpdateFeasibilityStudyRequest;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class FeasibilityStudyController extends Controller
 {
@@ -121,8 +122,37 @@ class FeasibilityStudyController extends Controller
     public function destroy(string $id)
     {
         $study = FeasibilityStudy::findOrFail($id);
+
+        $supabaseUrl = config('filesystems.disks.supabase.url') ?? env('SUPABASE_URL') ?? '';
+        $baseUrl = rtrim($supabaseUrl, '/');
+
+        // 1. حذف ملف الـ PDF من Supabase Storage
+        if (!empty($study->pdf_file)) {
+            try {
+                $pdfPath = str_replace($baseUrl . '/', '', $study->pdf_file);
+                // إزالة أي بادئة slash متبقية
+                $cleanPdfPath = ltrim($pdfPath, '/');
+                Storage::disk('supabase')->delete($cleanPdfPath);
+            } catch (\Throwable $e) {
+                Log::warning("فشل حذف ملف الـ PDF لدراسة الجدوى رقم {$study->id}: " . $e->getMessage());
+            }
+        }
+
+        // 2. حذف صورة الغلاف من Supabase Storage
+        if (!empty($study->cover_image)) {
+            try {
+                $imagePath = str_replace($baseUrl . '/', '', $study->cover_image);
+                // إزالة أي بادئة slash متبقية
+                $cleanImagePath = ltrim($imagePath, '/');
+                Storage::disk('supabase')->delete($cleanImagePath);
+            } catch (\Throwable $e) {
+                Log::warning("فشل حذف صورة الغلاف لدراسة الجدوى رقم {$study->id}: " . $e->getMessage());
+            }
+        }
+
+        // 3. حذف سجل دراسة الجدوى من قاعدة البيانات
         $study->delete();
 
-        return response()->json(['message' => 'Feasibility study deleted successfully']);
+        return response()->json(['message' => 'تم حذف دراسة الجدوى وكافة ملفاتها من السيرفر بنجاح']);
     }
 }
