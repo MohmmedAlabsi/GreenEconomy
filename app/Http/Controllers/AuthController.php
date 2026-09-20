@@ -110,10 +110,7 @@ class AuthController extends Controller
             }
         }
 
-        $admins = User::where('role_id', 1)
-            ->orWhereHas('role', fn($q) => $q->where('name', 'admin'))
-            ->orWhereHas('roles', fn($q) => $q->where('name', 'admin'))
-            ->get();
+        $admins = User::admins()->get();
 
         if ($admins->isNotEmpty()) {
             NotificationFacade::send($admins, new GeneralNotification([
@@ -171,5 +168,13 @@ class AuthController extends Controller
             'status'  => true,
             'message' => 'تم تسجيل الخروج بنجاح'
         ], 200);
+    }
+
+    public function me(Request $request)
+    {
+        return response()->json([
+            'status' => true,
+            'user'   => $request->user()->load(['role', 'roles']),
+        ]);
     }
 }

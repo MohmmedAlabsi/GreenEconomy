@@ -35,18 +35,7 @@ class DatabaseSeeder extends Seeder
             PlantSeeder::class,
             AttachmentSeeder::class,
             ActivityLogSeeder::class,
-            ConsultationRequestSeeder::class,
-            PlantDiseaseSeeder::class,
-            DiseaseTreatmentSeeder::class,
-            FeasibilityStudySeeder::class,
-            FeasibilityRequestSeeder::class,
-            FieldVisitSeeder::class,
-            KnowledgeBaseItemSeeder::class,
-            PlantSeeder::class,
-            EngineerProfileSeeder::class,            
-            
-
-
+            EngineerProfileSeeder::class,
         ]);
 
         

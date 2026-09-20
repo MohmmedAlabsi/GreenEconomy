@@ -90,8 +90,8 @@ class FieldVisitController extends Controller
         $farmer = User::find($visit->user_id);
         $farmerName = $visit->contact_name ?: ($farmer?->name ?? 'المزارع');
 
-        $admins = User::where('role_id', 1)->orWhereHas('role', fn($q)=>$q->where('name', 'admin'))->get();
-        if ($admins->isNotEmpty()) {
+            $admins = User::admins()->get();       
+            if ($admins->isNotEmpty()) {
             Notification::send($admins, new GeneralNotification([
                 'title'       => 'طلب نزول ميداني جديد',
                 'body'        => 'قام المزارع ' . $farmerName . ' بطلب نزول ميداني جديد رقم #' . $visit->id,
@@ -133,7 +133,7 @@ class FieldVisitController extends Controller
             $data['engineer_id'] = null;
             $data['current_step'] = 2;
 
-            $admins = User::where('role_id', 1)->orWhereHas('role', fn($q)=>$q->where('name', 'admin'))->get();
+            $admins = User::admins()->get();
             if ($admins->isNotEmpty()) {
                 Notification::send($admins, new GeneralNotification([
                     'title'       => 'اعتذار مهندس عن مهمة نزول',
@@ -188,7 +188,7 @@ class FieldVisitController extends Controller
             } catch (\Throwable $e) {}
         }
 
-        $admins = User::where('role_id', 1)->orWhereHas('role', fn($q)=>$q->where('name', 'admin'))->get();
+        $admins = User::admins()->get();
         if ($admins->isNotEmpty()) {
             $farmerName = $visit->contact_name ?? $visit->user?->name ?? 'المزارع';
             Notification::send($admins, new GeneralNotification([
@@ -282,7 +282,7 @@ class FieldVisitController extends Controller
         $engName = $engineer?->name ?? 'المهندس';
         $engId = $engineer?->id ?? $currentUser?->id;
 
-        $admins = User::where('role_id', 1)->orWhereHas('role', fn($q)=>$q->where('name', 'admin'))->get();
+        $admins = User::admins()->get();
         if ($admins->isNotEmpty()) {
             Notification::send($admins, new GeneralNotification([
                 'title'       => 'تقديم تسعيرة وموعد نزول',
@@ -355,7 +355,7 @@ class FieldVisitController extends Controller
                 'status'       => 'completed',
             ]);
 
-            $admins = User::where('role_id', 1)->orWhereHas('role', fn($q)=>$q->where('name', 'admin'))->get();
+            $admins = User::admins()->get();
             if ($admins->isNotEmpty()) {
                 Notification::send($admins, new GeneralNotification([
                     'title'       => 'تم إرفاق وإتمام تقرير النزول',
@@ -412,7 +412,7 @@ class FieldVisitController extends Controller
         $farmer = User::find($visit->user_id);
         $farmerName = $farmer?->name ?? 'المزارع';
 
-        $admins = User::where('role_id', 1)->orWhereHas('role', fn($q)=>$q->where('name', 'admin'))->get();
+        $admins = User::admins()->get();
         if ($admins->isNotEmpty()) {
             Notification::send($admins, new GeneralNotification([
                 'title'       => 'تقييم خدمة ومهندس جديد',

@@ -20,4 +20,16 @@ class PlatformSetting extends Model
     protected $casts = [
         'maintenance_mode' => 'boolean',
     ];
+
+    public function index()
+    {
+        $settings = PlatformSetting::firstOrCreate([], [
+            'platform_name'    => 'منصة الاقتصاد الأخضر',
+            'support_email'    => 'support@greeneconomy.ye',
+            'support_phone'    => '770000000',
+            'maintenance_mode' => false,
+        ]);
+
+        return response()->json(['status' => true, 'message' => 'تم جلب إعدادات المنصة بنجاح', 'data' => $settings]);
+    }
 }

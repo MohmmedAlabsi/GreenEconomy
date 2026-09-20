@@ -3,70 +3,73 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Category;
 
 class CategorySeeder extends Seeder
 {
     public function run(): void
     {
+        // تعطيل فحص المفاتيح الأجنبية لحذف المحتوى القديم بأمان
+        Schema::disableForeignKeyConstraints();
+
+        // حذف كافة السجلات القديمة وتصفير الترقيم التلقائي (Truncate)
+        Category::truncate();
+
+        // إعادة تفعيل فحص المفاتيح الأجنبية
+        Schema::enableForeignKeyConstraints();
+
         $categories = [
             [
-                'name' => 'الصناعات الغذائية',
-                'slug' => 'food-industries',
-                'type' => 'sector',
+                'name' => 'جدوى الإنتاج النباتي',
+                'slug' => 'plant-production',
+                'type' => 'feasibility_study',
             ],
             [
-                'name' => 'الصناعات الدوائية',
-                'slug' => 'pharmaceutical-industries',
-                'type' => 'sector',
+                'name' => 'جدوى الثروة الحيوانية',
+                'slug' => 'livestock-production',
+                'type' => 'feasibility_study',
             ],
             [
-                'name' => 'الصناعات الكيميائية',
-                'slug' => 'chemical-industries',
-                'type' => 'sector',
+                'name' => 'جدوى الاستزراع المائي والمناحل',
+                'slug' => 'aquaculture-and-beekeeping',
+                'type' => 'feasibility_study',
             ],
             [
-                'name' => 'الصناعات البلاستيكية',
-                'slug' => 'plastic-industries',
-                'type' => 'sector',
+                'name' => 'جدوى المشاتل والتنسيق الزراعي',
+                'slug' => 'nurseries-and-landscaping',
+                'type' => 'feasibility_study',
             ],
             [
-                'name' => 'الصناعات المعدنية',
-                'slug' => 'metal-industries',
-                'type' => 'sector',
+                'name' => 'جدوى التصنيع الغذائي الزراعي',
+                'slug' => 'agro-food-processing',
+                'type' => 'feasibility_study',
             ],
             [
-                'name' => 'الصناعات الهندسية',
-                'slug' => 'engineering-industries',
-                'type' => 'sector',
+                'name' => 'جدوى التخزين والتبريد',
+                'slug' => 'storage-and-cold-chain',
+                'type' => 'feasibility_study',
             ],
             [
-                'name' => 'الصناعات الكهربائية والإلكترونية',
-                'slug' => 'electrical-electronics',
-                'type' => 'sector',
+                'name' => 'جدوى أنظمة الري والزراعة المحمية',
+                'slug' => 'irrigation-and-greenhouses',
+                'type' => 'feasibility_study',
             ],
             [
-                'name' => 'مواد البناء',
-                'slug' => 'building-materials',
-                'type' => 'sector',
+                'name' => 'جدوى التسويق والتصدير الزراعي',
+                'slug' => 'agricultural-marketing-export',
+                'type' => 'feasibility_study',
             ],
             [
-                'name' => 'إعادة التدوير والاقتصاد الأخضر',
-                'slug' => 'recycling-green-economy',
-                'type' => 'sector',
-            ],
-            [
-                'name' => 'الطاقة المتجددة',
-                'slug' => 'renewable-energy',
-                'type' => 'sector',
+                'name' => 'دراسات جدوى مشاريع الاقتصاد الدائري وإعادة تدوير المخلفات وصناعة الأسمدة والمبيدات العضوية',
+                'slug' => 'circular-economy-and-organic-inputs',
+                'type' => 'feasibility_study',
             ],
         ];
 
         foreach ($categories as $category) {
-            Category::updateOrCreate(
-                ['slug' => $category['slug']],
-                $category
-            );
+            Category::create($category);
         }
     }
 }
