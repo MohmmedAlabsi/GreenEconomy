@@ -13,7 +13,19 @@ class FeasibilityStudyController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', FeasibilityStudy::class);
+
+        $user = $request->user();
         $query = FeasibilityStudy::with(['category', 'region']);
+
+        if (!$user->hasPermission('studies.manage')) {
+            $query->where(function ($scopedQuery) use ($user) {
+                $scopedQuery->where('user_id', $user->id);
+                if ($user->hasPermission('studies.view-approved')) {
+                    $scopedQuery->orWhere('status', 'approved');
+                }
+            });
+        }
 
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
@@ -26,9 +38,10 @@ class FeasibilityStudyController extends Controller
         return response()->json($query->latest()->paginate(50));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $study = FeasibilityStudy::with(['category', 'region', 'user'])->findOrFail($id);
+        $this->authorize('view', $study);
         return response()->json($study);
     }
 
@@ -39,7 +52,9 @@ class FeasibilityStudyController extends Controller
 
     public function store(StoreFeasibilityStudyRequest $request)
     {
+        $this->authorize('create', FeasibilityStudy::class);
         $data = $request->validated();
+        $data['user_id'] = $request->user()->id;
 
         $supabaseUrl = config('filesystems.disks.supabase.url') ?? env('SUPABASE_URL') ?? '';
         $baseUrl = rtrim($supabaseUrl, '/');
@@ -78,7 +93,9 @@ class FeasibilityStudyController extends Controller
         set_time_limit(300);
 
         $study = FeasibilityStudy::findOrFail($id);
+        $this->authorize('update', $study);
         $data = $request->validated();
+        unset($data['user_id']);
 
         $supabaseUrl = config('filesystems.disks.supabase.url') ?? env('SUPABASE_URL') ?? '';
         $baseUrl = rtrim($supabaseUrl, '/');
@@ -122,6 +139,7 @@ class FeasibilityStudyController extends Controller
     public function destroy(string $id)
     {
         $study = FeasibilityStudy::findOrFail($id);
+        $this->authorize('delete', $study);
 
         $supabaseUrl = config('filesystems.disks.supabase.url') ?? env('SUPABASE_URL') ?? '';
         $baseUrl = rtrim($supabaseUrl, '/');

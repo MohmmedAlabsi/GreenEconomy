@@ -98,8 +98,10 @@ class EngineerProfileController extends Controller
     public function update(UpdateEngineerProfileRequest $request, string $id)
     {
         $profile = EngineerProfile::findOrFail($id);
+        $this->authorize('update', $profile);
         $user = User::find($profile->user_id);
         $validated = $request->validated();
+        unset($validated['user_id']);
         
         $baseUrl = rtrim(config('filesystems.disks.supabase.url'), '/');
 
@@ -132,9 +134,10 @@ class EngineerProfileController extends Controller
         ]);
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
         $profile = EngineerProfile::findOrFail($id);
+        $this->authorize('delete', $profile);
         
         // حذف ملف الـ CV من Supabase قبل مسح السجل
         if ($profile->cv_file && str_contains($profile->cv_file, 'supabase.co')) {
