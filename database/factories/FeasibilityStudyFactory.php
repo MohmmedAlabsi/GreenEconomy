@@ -30,7 +30,8 @@ class FeasibilityStudyFactory extends Factory
 
             'region_id' => Region::inRandomOrder()->first()?->id,
 
-            'cover_image' => fake()->imageUrl(640, 480, 'business'),
+            // Stable, reachable placeholder (fake()->imageUrl() points at the dead via.placeholder.com)
+            'cover_image' => 'https://picsum.photos/seed/' . fake()->uuid() . '/640/480',
 
             'capital_required' => fake()->randomFloat(
                 2,

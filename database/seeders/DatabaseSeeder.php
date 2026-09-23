@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,38 +12,49 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * Order matters (parents before children):
+     *   Category / Role / PlatformSetting / Region   -> no dependencies
+     *   Specialization                               -> roles
+     *   User                                         -> roles, regions
+     *   everything after UserSeeder                  -> users (+ categories / regions / plant_diseases)
      */
     public function run(): void
     {
+        // The seeders write through models (create / firstOrCreate / updateOrCreate);
+        // un-guard for the duration of the run so a model's $fillable can never block seeding.
+        Model::unguard();
 
-        $this->call([
-            CategorySeeder::class,
-            RoleSeeder::class,
-            PlatformSettingSeeder::class,
-            RegionSeeder::class,
-            SpecializationSeeder::class,
-            UserSeeder::class,
-            UserPreferenceSeeder::class,
-            ConsultationSeeder::class,
-            ConsultationRequestSeeder::class,
-            PlantDiseaseSeeder::class,
-            DiseaseTreatmentSeeder::class,
-            FeasibilityStudySeeder::class,
-            FeasibilityRequestSeeder::class,
-            FieldVisitSeeder::class,
-            KnowledgeBaseItemSeeder::class,
-            PlantSeeder::class,
-            AttachmentSeeder::class,
-            ActivityLogSeeder::class,
-            EngineerProfileSeeder::class,
-        ]);
+        try {
+            $this->call([
+                // ---- reference data -------------------------------------------------
+                CategorySeeder::class,
+                RoleSeeder::class,
+                PlatformSettingSeeder::class,
+                RegionSeeder::class,
+                SpecializationSeeder::class,   // needs roles
 
-        
-        // User::factory(10)->create();
+                // ---- users (needs roles + regions) ----------------------------------
+                UserSeeder::class,
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+                // ---- domain data (needs users / categories / regions) ---------------
+                ConsultationSeeder::class,
+                ConsultationRequestSeeder::class,
+                PlantDiseaseSeeder::class,
+                DiseaseTreatmentSeeder::class, // needs plant_diseases
+                FeasibilityStudySeeder::class,
+                FeasibilityRequestSeeder::class,
+                FieldVisitSeeder::class,
+                KnowledgeBaseItemSeeder::class,
+                PlantSeeder::class,
+
+                // ---- polymorphic / dependent data -----------------------------------
+                AttachmentSeeder::class,       // needs consultations, feasibility studies, plant diseases
+                ActivityLogSeeder::class,
+                EngineerProfileSeeder::class,  // needs users + specializations
+            ]);
+        } finally {
+            Model::reguard();
+        }
     }
 }

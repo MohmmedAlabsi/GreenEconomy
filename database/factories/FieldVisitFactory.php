@@ -18,7 +18,8 @@ class FieldVisitFactory extends Factory
 
             'contact_name' => fake()->name(),
 
-            'contact_phone' => fake()->phoneNumber(),
+            // contact_phone is varchar(20); fake()->phoneNumber() can exceed that (e.g. "1-234-567-8901 x12345")
+            'contact_phone' => '77' . fake()->numerify('#######'),
 
             'governorate' => fake()->randomElement([
                 'Sana’a',

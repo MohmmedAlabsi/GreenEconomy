@@ -3,12 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\Region;
-use App\Models\Role;
-use App\Models\Specialization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends Factory<User>
@@ -34,7 +33,11 @@ class UserFactory extends Factory
 
             'password' => static::$password ??= Hash::make('password'),
 
-            'avatar' => fake()->imageUrl(200, 200, 'people'),
+            // Gravatar identicon: always reachable, deterministic per e-mail
+            // (fake()->imageUrl() points at the dead via.placeholder.com).
+            'avatar' => fn (array $attributes) => 'https://www.gravatar.com/avatar/'
+                . md5(strtolower($attributes['email']))
+                . '?d=identicon&s=200',
 
             'district' => fake()->city(),
 
@@ -50,6 +53,7 @@ class UserFactory extends Factory
 
             'identity_verified' => fake()->boolean(80),
 
+            // `roles` is the Spatie table that RoleSeeder fills.
             'role_id' => Role::query()->inRandomOrder()->value('id'),
 
             'region_id' => Region::query()->inRandomOrder()->value('id'),

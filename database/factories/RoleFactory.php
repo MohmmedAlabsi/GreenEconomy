@@ -4,12 +4,15 @@ namespace Database\Factories;
 
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class RoleFactory extends Factory
 {
     protected $model = Role::class;
 
+    /**
+     * `roles` is the Spatie permission table: id, name, guard_name, timestamps
+     * (there is no `slug` column). The guard matches RoleSeeder.
+     */
     public function definition(): array
     {
         $roles = [
@@ -23,11 +26,9 @@ class RoleFactory extends Factory
             'Technical Support',
         ];
 
-        $name = fake()->unique()->randomElement($roles);
-
         return [
-            'name' => $name,
-            'slug' => Str::slug($name),
+            'name'       => fake()->unique()->randomElement($roles),
+            'guard_name' => 'api',
         ];
     }
 }

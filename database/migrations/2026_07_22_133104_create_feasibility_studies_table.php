@@ -21,13 +21,15 @@ return new class extends Migration
             $table->foreign('category_id')->references('id')->on('categories');
             $table->unsignedBigInteger('region_id')->nullable();
             $table->foreign('region_id')->references('id')->on('regions');
-            $table->text('cover_image')->nullable()->change();
+            // NOTE: ->change() is only valid inside Schema::table(). Inside Schema::create() it
+            // makes Laravel skip the column entirely, so these two columns never existed.
+            $table->text('cover_image')->nullable();
             $table->decimal('capital_required', 15, 2)->nullable();
             $table->decimal('expected_roi', 5, 2);
             $table->integer('payback_period')->nullable();
             $table->string('risk_level', 50)->nullable();
             $table->string('status', 50)->default('draft');
-            $table->text('pdf_file')->nullable()->change();
+            $table->text('pdf_file')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users');
             $table->timestamp('created_at')->nullable();
@@ -42,9 +44,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('feasibility_studies', function (Blueprint $table) {
-            $table->string('cover_image', 255)->nullable()->change();
-            $table->string('pdf_file', 255)->nullable()->change();
-        });
+        Schema::dropIfExists('feasibility_studies');
     }
 };

@@ -17,6 +17,12 @@ class EngineerProfileFactory extends Factory
             'user_id'             => User::factory(),
             'specialization_id'   => Specialization::inRandomOrder()->first()?->id ?? Specialization::factory(),
             'years_of_experience' => $this->faker->numberBetween(1, 20),
+            'qualification'       => $this->faker->randomElement([
+                'بكالوريوس علوم زراعية',
+                'ماجستير وقاية نباتات',
+                'دبلوم إنتاج نباتي',
+                'دكتوراه علوم التربة والمياه',
+            ]),
             'bio'                 => $this->faker->paragraph(3),
             'cv_file'             => 'cvs/sample_' . $this->faker->uuid() . '.pdf',
         ];

@@ -14,7 +14,14 @@ class EngineerProfileSeeder extends Seeder
     public function run(): void
     {
         // جلب أول 10 مستخدمين ليس لديهم بروفايل مهندس بعد
-        $usersWithoutProfile = User::doesntHave('engineerProfile')->take(10)->get();
+        // (query on engineer_profiles.user_id directly so this does not depend on a model relation)
+        $profiledUserIds = EngineerProfile::query()->pluck('user_id');
+
+        $usersWithoutProfile = User::query()
+            ->whereNotIn('id', $profiledUserIds)
+            ->orderBy('id')
+            ->take(10)
+            ->get();
 
         foreach ($usersWithoutProfile as $user) {
             EngineerProfile::factory()->create([

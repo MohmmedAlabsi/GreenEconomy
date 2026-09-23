@@ -42,18 +42,21 @@ class KnowledgeBaseItemFactory extends Factory
 
             'category_id' => Category::inRandomOrder()->first()->id,
 
-            'media_url' => fake()->url(),
+            // Local storage path (same convention as AttachmentFactory) instead of random fake domains.
+            'media_url' => fn (array $attributes) => '/storage/knowledge-base/'
+                . fake()->uuid()
+                . ($attributes['type'] === 'video' ? '.mp4' : '.pdf'),
 
             'file_size_bytes' => fake()->numberBetween(
                 10000,
                 5000000
             ),
 
-            'view_count' => fake()->numberBetween(
-                0,
-                5000
-            ),
-            
+            // knowledge_base_items.user_id is NOT NULL (the author of the item)
+            'user_id' => User::query()->inRandomOrder()->value('id') ?? User::factory(),
+
+            // NOTE: `view_count` was removed - the column does not exist in the migration.
+
             'created_at' => now(),
 
             'updated_at' => now(),

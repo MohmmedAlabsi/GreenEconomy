@@ -50,7 +50,11 @@ class PlantFactory extends Factory
                 'Winter',
             ]),
 
-            'image_url' => fake()->imageUrl(640, 480, 'nature'),
+            // plants.category_id is NOT NULL and has no default
+            'category_id' => Category::query()->inRandomOrder()->value('id') ?? Category::factory(),
+
+            // Stable, reachable placeholder (fake()->imageUrl() points at the dead via.placeholder.com)
+            'image_url' => 'https://picsum.photos/seed/' . fake()->uuid() . '/640/480',
 
             'created_at' => now(),
 
