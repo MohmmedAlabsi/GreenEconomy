@@ -36,7 +36,7 @@ class UserSeeder extends Seeder
                 'membership_tier'   => 'premium',
                 'status'            => 'active',
                 'identity_verified' => true,
-                'role_id'           => Role::where('name', 'Admin')->first()?->id,
+                'role_id'           => Role::where('name', 'admin')->first()?->id,
                 'region_id'         => Region::query()->first()?->id,
             ]
         );

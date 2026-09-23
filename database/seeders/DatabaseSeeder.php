@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
                 // ---- reference data -------------------------------------------------
                 CategorySeeder::class,
                 RoleSeeder::class,
+                PermissionSeeder::class,
                 PlatformSettingSeeder::class,
                 RegionSeeder::class,
                 SpecializationSeeder::class,   // needs roles
