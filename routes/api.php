@@ -82,7 +82,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/notifications/send', [NotificationController::class, 'send']);
     
     // مسارات إدارة طلبات المهندسين (للأدمن)
-    Route::middleware(['auth:sanctum', 'role:Admin'])->group(function () {
+    Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::get('/admin/engineer_join_requests', [AdminEngineerController::class, 'indexRequests']);
         Route::post('/admin/engineer_join_requests/{id}/approve', [AdminEngineerController::class, 'approveRequest']);
         Route::post('/admin/engineer_join_requests/{id}/reject', [AdminEngineerController::class, 'rejectRequest']);
@@ -99,7 +99,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/users/{id}', [UserController::class, 'update']);
 
     // مسارات الأدمن الإدارية
-    Route::middleware(['role:Admin'])->group(function () {
+    Route::middleware(['role:admin'])->group(function () {
         Route::apiResource('users', UserController::class);
         Route::apiResource('roles', RoleController::class);
         Route::put('/platform_settings', [PlatformSettingController::class, 'update'])->name('api.platform-settings.update');
@@ -110,11 +110,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/settings', [PlatformSettingController::class, 'update']);
     });
 
-    Route::middleware(['permission:manage consultations|answer consultations'])->group(function () {
+    Route::middleware(['role:admin|engineer'])->group(function () {
         Route::apiResource('consultations', ConsultationController::class);
     });
 
-    Route::middleware(['permission:manage feasibility studies|show feasibility studies'])->group(function () {
+    Route::middleware(['permission:studies.view-approved|studies.request|studies.manage'])->group(function () {
         Route::apiResource('feasibility_studies', FeasibilityStudyController::class);
         Route::post('feasibility_studies/{id}/update', [FeasibilityStudyController::class, 'update']);
     });
@@ -128,15 +128,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('plants', PlantController::class);
 
     // إدارة الزيارات الميدانية ومراحل الرحلة
-    Route::apiResource('field_visits', FieldVisitController::class);
-    Route::prefix('field_visits')->group(function () {
-        Route::patch('{id}/assign', [FieldVisitController::class, 'assignEngineer']);
-        Route::patch('{id}/estimate', [FieldVisitController::class, 'submitEstimate']);
-        Route::post('{id}/report', [FieldVisitController::class, 'submitReport']);
-        Route::post('{id}/rating', [FieldVisitController::class, 'submitRating']);
+    Route::middleware(['permission:visits.create|visits.view-own|visits.view-assigned|visits.manage'])->group(function () {
+        Route::apiResource('field_visits', FieldVisitController::class);
+        Route::prefix('field_visits')->group(function () {
+            Route::patch('{id}/assign', [FieldVisitController::class, 'assignEngineer']);
+            Route::patch('{id}/estimate', [FieldVisitController::class, 'submitEstimate']);
+            Route::post('{id}/report', [FieldVisitController::class, 'submitReport']);
+            Route::post('{id}/rating', [FieldVisitController::class, 'submitRating']);
+        });
     });
 
-    Route::middleware(['role:Admin|Agricultural Expert'])->group(function () {
+    Route::middleware(['role:admin|engineer'])->group(function () {
         Route::post('/knowledge_base_item', [KnowledgeBaseController::class, 'store'])->name('api.knowledge-base.store');
         Route::put('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'update'])->name('api.knowledge-base.update');
         Route::delete('/knowledge_base_item/{id}', [KnowledgeBaseController::class, 'destroy'])->name('api.knowledge-base.destroy');
@@ -147,8 +149,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     //Route::get('/engineer_profiles', [EngineerProfileController::class, 'show']);
-    Route::post('/engineer_profiles', [EngineerProfileController::class, 'store']);
-    Route::put('/engineer_profiles/{id}', [EngineerProfileController::class, 'update']);
+    Route::middleware(['permission:profiles.manage-own|profiles.manage-all'])->group(function () {
+        Route::post('/engineer_profiles', [EngineerProfileController::class, 'store']);
+        Route::put('/engineer_profiles/{id}', [EngineerProfileController::class, 'update']);
+    });
 
     // المرفقات
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('api.attachments.store');

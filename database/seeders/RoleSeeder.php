@@ -45,7 +45,7 @@ class RoleSeeder extends Seeder
 
         // 4. إنشاء الأدوار
         $admin = Role::firstOrCreate([
-            'name'       => 'Admin',
+            'name'       => 'admin',
             'guard_name' => $guardName,
         ]);
 

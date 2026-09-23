@@ -22,14 +22,21 @@ class FieldVisitController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', FieldVisit::class);
+        $user = $request->user();
         $query = FieldVisit::with(['user', 'engineer', 'report', 'attachments'])->latest();
 
-        if ($request->has('engineer_id')) {
-            $query->where('engineer_id', $request->engineer_id);
-        }
-
-        if ($request->has('user_id')) {
-            $query->where('user_id', $request->user_id);
+        if ($user->hasPermission('visits.manage')) {
+            if ($request->filled('engineer_id')) {
+                $query->where('engineer_id', $request->engineer_id);
+            }
+            if ($request->filled('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
+        } elseif ($user->hasPermission('visits.view-assigned')) {
+            $query->where('engineer_id', $user->id);
+        } else {
+            $query->where('user_id', $user->id);
         }
 
         if ($request->has('status')) {
@@ -40,15 +47,18 @@ class FieldVisitController extends Controller
         return response()->json($visits);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $visit = FieldVisit::with(['user', 'engineer', 'report', 'attachments'])->findOrFail($id);
+        $this->authorize('view', $visit);
         return response()->json($visit);
     }
 
     public function store(StoreFieldVisitRequest $request)
     {
+        $this->authorize('create', FieldVisit::class);
         $validated = $request->validated();
+        $validated['user_id'] = $request->user()->id;
         
         $validated['current_step'] = 1;
         $validated['status'] = $validated['status'] ?? 'submitted';
@@ -123,7 +133,9 @@ class FieldVisitController extends Controller
     public function update(UpdateFieldVisitRequest $request, string $id)
     {
         $visit = FieldVisit::findOrFail($id);
+        $this->authorize('update', $visit);
         $data = $request->validated();
+        unset($data['user_id']);
 
         if (isset($data['status']) && $data['status'] === 'rejected') {
             $currentUser = $request->user();
@@ -159,6 +171,7 @@ class FieldVisitController extends Controller
     public function destroy(Request $request, string $id)
     {
         $visit = FieldVisit::with(['user', 'attachments'])->findOrFail($id);
+        $this->authorize('delete', $visit);
         $baseUrl = rtrim(config('filesystems.disks.supabase.url') ?? env('SUPABASE_URL') ?? '', '/');
 
         if ($visit->attachments && $visit->attachments->isNotEmpty()) {
@@ -193,7 +206,7 @@ class FieldVisitController extends Controller
             $farmerName = $visit->contact_name ?? $visit->user?->name ?? 'المزارع';
             Notification::send($admins, new GeneralNotification([
                 'title'       => 'إلغاء طلب نزول ميداني',
-                'body'        => 'قام المزارع ' . $farmerName . ' بإلغاء طلب النزول الميداني رقم #' . $visit->id,
+                'body'        => 'قام المزارع ' . $farmerName . ' بإلغ��ء طلب النزول الميداني رقم #' . $visit->id,
                 'priority'    => 'high',
                 'type'        => 'field_visit',
                 'sender_id'   => $visit->user_id,
@@ -213,6 +226,7 @@ class FieldVisitController extends Controller
     {
         $validated = $request->validated();
         $visit = FieldVisit::findOrFail($id);
+        $this->authorize('updateStep', $visit);
         $engineerId = $validated['engineer_id'];
 
         $visit->update([
@@ -269,6 +283,7 @@ class FieldVisitController extends Controller
     {
         $validated = $request->validated();
         $visit = FieldVisit::findOrFail($id);
+        $this->authorize('updateStep', $visit);
 
         $visit->update([
             'estimated_cost' => $validated['estimated_cost'],
@@ -320,6 +335,7 @@ class FieldVisitController extends Controller
     {
         try {
             $visit = FieldVisit::findOrFail($id);
+            $this->authorize('uploadReport', $visit);
             $validated = $request->validated();
 
             $fileUrl = null;
@@ -402,6 +418,7 @@ class FieldVisitController extends Controller
     {
         $validated = $request->validated();
         $visit = FieldVisit::findOrFail($id);
+        $this->authorize('rate', $visit);
         
         $visit->update([
             'rating'         => $validated['rating'],

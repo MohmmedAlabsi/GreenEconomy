@@ -49,9 +49,41 @@ class User extends Authenticatable
      */
     public function scopeAdmins($query)
     {
-        return $query->whereHas('role', function ($q) {
-            $q->where('name', 'Admin');
+        return $query->where(function ($q) {
+            $q->whereHas('role', fn ($role) => $role->whereIn('name', ['admin', 'Admin']))
+                ->orWhereHas('roles', fn ($role) => $role->whereIn('name', ['admin', 'Admin']))
+                ->orWhere('role_id', 1);
         });
+    }
+
+    public function roleName(): string
+    {
+        return strtolower((string) ($this->role?->name ?? $this->roles->first()?->name ?? match ($this->role_id) {
+            1 => 'admin',
+            2 => 'farmer',
+            3 => 'engineer',
+            default => '',
+        }));
+    }
+
+    public function hasRole($roles, $guard = null): bool
+    {
+        foreach ((array) $roles as $role) {
+            $name = is_object($role) ? $role->name : $role;
+            if (strtolower((string) $name) === $this->roleName()) {
+                return true;
+            }
+        }
+
+        return $this->roles()->whereIn('name', array_map(
+            fn ($role) => is_object($role) ? $role->name : $role,
+            (array) $roles,
+        ))->exists();
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        return $this->roleName() === 'admin' || $this->can($permission);
     }
 
     // العلاقة مع ملف المهندس (إضافة حديثة)
