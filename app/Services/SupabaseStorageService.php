@@ -10,6 +10,7 @@ class SupabaseStorageService
     {
         Storage::disk('supabase')->put($path, $contents);
         return $path;
+        return Storage::disk("supabase")->put($path, $contents);
     }
 
     public function delete(string $path): bool
@@ -26,5 +27,6 @@ class SupabaseStorageService
     {
         $url = rtrim(config('filesystems.disks.supabase.url') ?? env('SUPABASE_URL', ''), '/');
         return ltrim(str_replace($url.'/', '', $value), '/');
+        return Storage::disk("supabase")->delete($path);
     }
 }

@@ -1,25 +1,31 @@
 <?php
 
 namespace App\Http\Controllers\Feasibility;
-use App\Models\FeasibilityRequest;
-use App\Models\User;
-use App\Notifications\GeneralNotification;
-use Illuminate\Support\Facades\Notification;
+
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Feasibility\StoreFeasibilityRequest;
 use App\Http\Requests\Feasibility\UpdateFeasibilityRequest;
+use App\Http\Resources\Feasibility\FeasibilityRequestResource;
+use App\Models\FeasibilityRequest;
+use App\Services\Feasibility\FeasibilityRequestService;
 
-class FeasibilityRequestController extends \App\Http\Controllers\Controller
+class FeasibilityRequestController extends Controller
 {
-    public function index()
+    public function __construct(private readonly FeasibilityRequestService $requests)
     {
-        $requests = FeasibilityRequest::with(['user', 'category', 'region'])->latest()->paginate(50);
-        return response()->json($requests);
     }
 
-    public function show($id)
+    public function index()
     {
-        $request_id = FeasibilityRequest::with(['user', 'category', 'region'])->findOrFail($id);
-        return response()->json($request_id);
+        return FeasibilityRequestResource::collection(
+            FeasibilityRequest::with(['user', 'category', 'region'])->latest()->paginate(50)
+        );
+    }
+
+    public function show(string $id)
+    {
+        $request = FeasibilityRequest::with(['user', 'category', 'region'])->findOrFail($id);
+        return new FeasibilityRequestResource($request);
     }
 
     public function create()
@@ -29,44 +35,15 @@ class FeasibilityRequestController extends \App\Http\Controllers\Controller
 
     public function store(StoreFeasibilityRequest $request)
     {
-        $requestData = FeasibilityRequest::create($request->validated());
-        
-        $farmer = User::find($requestData->user_id);
-        $farmerName = $farmer?->name ?? 'المزارع';
-
-        // 1. إشعار مدراء النظام باسم المزارع الصريح وليس رقمه
-        $admins = User::admins()->get();
-        if ($admins->isNotEmpty()) {
-            Notification::send($admins, new GeneralNotification([
-                'title'       => 'طلب دراسة جدوى جديد',
-                'body'        => 'قام المزارع ' . $farmerName . ' بتقديم طلب دراسة جدوى لمشروع: "' . $requestData->project_title . '"',
-                'priority'    => 'normal',
-                'type'        => 'feasibility_request',
-                'sender_id'   => $requestData->user_id,
-                'sender_name' => $farmerName,
-                'sender_role' => 'farmer',
-                'action_url'  => '/admin/feasibility-requests/' . $requestData->id,
-            ]));
-        }
-
-        // 2. إشعار المزارع بتأكيد الاستلام
-        if ($farmer) {
-            $farmer->notify(new GeneralNotification([
-                'title'      => 'تم استلام طلب دراسة الجدوى',
-                'body'       => 'تم حفظ طلب دراسة الجدوى الخاص بمشروع "' . $requestData->project_title . '" وسيتم معالجته قريباً.',
-                'priority'   => 'normal',
-                'type'       => 'feasibility_request',
-                'action_url' => '/farmer/feasibility-requests/' . $requestData->id,
-            ]));
-        }
+        $requestData = $this->requests->createRequest($request->validated(), $request->user()->id);
 
         return response()->json([
             'message' => 'Feasibility request created successfully',
-            'data' => $requestData
+            'data' => new FeasibilityRequestResource($requestData->load(['user', 'category', 'region'])),
         ], 201);
     }
 
-    public function edit($id)
+    public function edit(string $id)
     {
         return response()->json(['message' => 'Edit feasibility request', 'id' => $id]);
     }
@@ -76,10 +53,7 @@ class FeasibilityRequestController extends \App\Http\Controllers\Controller
         $requestData = FeasibilityRequest::findOrFail($id);
         $requestData->update($request->validated());
 
-        return response()->json([
-            'message' => 'Feasibility request updated successfully',
-            'data' => $requestData
-        ]);
+        return response()->json(['message' => 'Feasibility request updated successfully', 'data' => new FeasibilityRequestResource($requestData->load(['user', 'category', 'region']))]);
     }
 
     public function destroy(string $id)
