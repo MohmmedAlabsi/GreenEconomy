@@ -10,6 +10,10 @@ use Spatie\Permission\Models\Role;
 class UserService
 {
     public function queryForUser(int $userId) { return User::query()->whereKey($userId); }
+    public function search(array $filters) { $query = User::with(['region', 'role', 'engineerProfile.specialization']); foreach (['status', 'role_id', 'region_id'] as $field) { if (isset($filters[$field])) $query->where($field, $filters[$field]); } if (!empty($filters['search'])) $query->where(fn ($q) => $q->where('name', 'like', '%'.$filters['search'].'%')->orWhere('email', 'like', '%'.$filters['search'].'%')); return $query->latest()->get(); }
+    public function find(string|int $id): User { return User::with(['role', 'roles', 'region', 'engineerProfile.specialization', 'consultations'])->findOrFail($id); }
+    public function delete(User $user): bool { return DB::transaction(fn () => (bool) $user->delete()); }
+    public function updatePassword(User $user, string $password): void { $user->update(['password' => Hash::make($password)]); }
 
     public function create(array $data): User
     {
