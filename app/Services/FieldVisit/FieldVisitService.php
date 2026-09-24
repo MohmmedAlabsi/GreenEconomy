@@ -16,11 +16,6 @@ class FieldVisitService
 {
     public function __construct(private readonly SupabaseStorageService $storage) {}
 
-    public function queryForUser(int $userId)
-    {
-        return FieldVisit::query()->where('user_id', $userId);
-    }
-
     public function index(int $userId, array $filters = [])
     {
         $query = FieldVisit::query()->with(['user', 'engineer', 'attachments']);
