@@ -8,7 +8,7 @@ use App\Services\Knowledge\PlantDiseaseService;
 class PlantDiseaseController extends Controller
 {
  public function __construct(private readonly PlantDiseaseService $service) {}
- public function index() { return PlantDiseaseResource::collection($this->service->query()->latest()->get()); }
+ public function index() { $this->authorize('viewAny', \App\Models\PlantDisease::class); return PlantDiseaseResource::collection($this->service->query()->latest()->get()); }
  public function show(string $id) { return new PlantDiseaseResource($this->service->find($id)); }
  public function store(StorePlantDiseaseRequest $request) { return response()->json(['message'=>'Disease created successfully','data'=>new PlantDiseaseResource($this->service->create($request->validated(),$request->file('image')))],201); }
  public function update(UpdatePlantDiseaseRequest $request,string $id) { return new PlantDiseaseResource($this->service->update($this->service->find($id),$request->validated(),$request->file('image'))); }

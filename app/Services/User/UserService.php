@@ -22,7 +22,8 @@ class UserService
     public function create(array $data): User
     {
         return DB::transaction(function () use ($data) {
-            $roleId = $data['role_id'] ?? null; unset($data['role_id']);
+            $roleId = $data['role_id'] ?? null;
+            unset($data['role_id']);
             if (!empty($data['password'])) $data['password'] = Hash::make($data['password']);
             $user = User::create($data);
             if ($roleId && ($role = Role::find($roleId))) $user->assignRole($role);
@@ -33,7 +34,8 @@ class UserService
     public function update(User $user, array $data, ?UploadedFile $avatar = null): User
     {
         return DB::transaction(function () use ($user, $data, $avatar) {
-            $roleId = $data['role_id'] ?? null; unset($data['role_id']);
+            $roleId = $data['role_id'] ?? null;
+            unset($data['role_id']);
             if ($avatar?->isValid()) {
                 if ($user->avatar) $this->storage->delete($user->avatar);
                 $path = $avatar->store('avatars/'.$user->id, 'supabase');
