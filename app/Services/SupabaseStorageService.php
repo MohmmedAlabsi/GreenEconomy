@@ -8,11 +8,25 @@ class SupabaseStorageService
 {
     public function upload(string $path, $contents): string
     {
+        Storage::disk('supabase')->put($path, $contents);
+        return $path;
         return Storage::disk("supabase")->put($path, $contents);
     }
 
     public function delete(string $path): bool
     {
+        return Storage::disk('supabase')->delete($this->path($path));
+    }
+
+    public function url(string $path): string
+    {
+        return rtrim(config('filesystems.disks.supabase.url') ?? env('SUPABASE_URL', ''), '/').'/'.ltrim($path, '/');
+    }
+
+    public function path(string $value): string
+    {
+        $url = rtrim(config('filesystems.disks.supabase.url') ?? env('SUPABASE_URL', ''), '/');
+        return ltrim(str_replace($url.'/', '', $value), '/');
         return Storage::disk("supabase")->delete($path);
     }
 }
