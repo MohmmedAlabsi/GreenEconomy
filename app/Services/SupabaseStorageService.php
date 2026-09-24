@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Storage;
 
 class SupabaseStorageService
 {
-    public function upload(string $path, $contents): string
+    public function upload(string $path, mixed $contents): string
     {
         Storage::disk('supabase')->put($path, $contents);
         return $path;
