@@ -12,6 +12,8 @@ class PlatformSettingService
 {
     public function __construct(private readonly SupabaseStorageService $storage) {}
 
+    public function first(): PlatformSetting { return PlatformSetting::firstOrCreate(['id' => 1], ['platform_name' => 'منصة الاقتصاد الأخضر']); }
+
     public function queryForUser(int $userId)
     {
         return PlatformSetting::query()->where('user_id', $userId);

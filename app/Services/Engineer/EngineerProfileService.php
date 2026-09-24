@@ -11,6 +11,12 @@ class EngineerProfileService
 {
     public function __construct(private readonly SupabaseStorageService $storage) {}
 
+    public function query() { return EngineerProfile::query()->with(['user.region', 'specialization']); }
+    public function find(string|int $id): EngineerProfile { return $this->query()->findOrFail($id); }
+    public function findForUserOrFail(string|int $id): EngineerProfile { return $this->query()->where('user_id', $id)->firstOrFail(); }
+    public function save(int $userId, array $data, ?UploadedFile $cv = null, ?UploadedFile $avatar = null): EngineerProfile { $profile = EngineerProfile::firstOrNew(['user_id' => $userId]); return $this->update($profile, $data, $cv, null); }
+    public function delete(EngineerProfile $profile): bool { return DB::transaction(fn () => (bool) $profile->delete()); }
+
     public function queryForUser(int $userId)
     {
         return EngineerProfile::query()->where('user_id', $userId);

@@ -16,10 +16,38 @@ class FieldVisitService
 {
     public function __construct(private readonly SupabaseStorageService $storage) {}
 
-    public function queryForUser(int $userId)
+    public function index(int $userId, array $filters = [])
     {
-        return FieldVisit::query()->where('user_id', $userId);
+        $query = FieldVisit::query()->with(['user', 'engineer', 'attachments']);
+        if (!isset($filters['all'])) $query->where('user_id', $userId);
+        return $query->latest()->get();
     }
+
+    public function find(string|int $id): FieldVisit
+    {
+        return FieldVisit::with(['user', 'engineer', 'report', 'attachments'])->findOrFail($id);
+    }
+
+    public function update(FieldVisit $visit, array $data, int $userId): FieldVisit
+    {
+        $files = $data['attachments'] ?? [];
+        unset($data['attachments']);
+        return DB::transaction(function () use ($visit, $data, $files) {
+            $visit->update($data);
+            foreach ((array) $files as $file) {
+                if ($file instanceof UploadedFile && $file->isValid()) {
+                    $path = $file->store('field_visits', 'supabase');
+                    Attachment::create(['attachable_type' => FieldVisit::class, 'attachable_id' => $visit->id, 'user_id' => $visit->user_id, 'file_name' => $file->getClientOriginalName(), 'file_path' => $path, 'file_type' => $file->getClientMimeType(), 'file_size' => $file->getSize(), 'url' => $this->storage->url($path)]);
+                }
+            }
+            return $visit->fresh(['user', 'engineer', 'report', 'attachments']);
+        });
+    }
+
+    public function assignEngineer(FieldVisit $visit, int $engineerId): FieldVisit { $visit->update(['engineer_id' => $engineerId]); return $visit->fresh(['engineer']); }
+    public function submitEstimate(FieldVisit $visit, array $data): FieldVisit { $visit->update($data + ['current_step' => 4]); return $visit->fresh(); }
+    public function submitReport(FieldVisit $visit, array $data): FieldVisit { return $this->updateJourneyStep($visit, 8, $data['notes'] ?? null, $data['attachment'] ?? null); }
+    public function submitRating(FieldVisit $visit, array $data): FieldVisit { $visit->update($data); return $visit->fresh(); }
 
     public function createVisit(array $data, int $userId): FieldVisit
     {
